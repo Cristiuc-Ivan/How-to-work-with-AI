@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Урок 2. Размышление (thinking)</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<div class="kicker">Урок 2 · около 10 минут · после <a href="0001-three-levers.html">урока 1</a></div>
+<h1>Размышление: что это и почему его нельзя выключить</h1>
+
+<div class="win"><b>Победа урока.</b> Вы будете знать, что скрыто за серым курсивом в Claude Code, за что вы платите, и чем на самом деле управлять, когда хочется «чтобы думал поменьше».</div>
+
+<h2>1. Что такое размышление</h2>
+<p>Перед ответом модель может сначала «подумать»: написать себе черновик рассуждений, и только потом ответить. Это позволяет решать задачи, где ответ нельзя выдать сразу. Документация связывает пользу размышления с математикой, кодом, анализом и долгой агентной работой <a href="https://platform.claude.com/docs/en/build-with-claude/thinking">[Thinking]</a>.</p>
+<p>Три факта, которые нужно держать в голове:</p>
+<ul>
+<li><b>То, что вы видите, — пересказ.</b> Текст в блоке размышления — краткое изложение рассуждений, а не сырой поток <a href="https://platform.claude.com/docs/en/build-with-claude/thinking">[Thinking]</a>.</li>
+<li><b>Платите за всё размышление целиком</b>, а не за видимый кусочек. Оно считается как выходные токены <a href="https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost">[Steering thinking]</a>.</li>
+<li><b>Свёрнуто ≠ бесплатно.</b> В Claude Code вывод размышления по умолчанию свёрнут, <code>Ctrl+O</code> показывает его серым курсивом, но тратятся токены в любом случае <a href="https://code.claude.com/docs/en/model-config">[Model configuration]</a>. У новых моделей даже в API по умолчанию возвращается пустой блок: это снижает задержку, но не стоимость.</li>
+</ul>
+
+<h2>2. Адаптивное размышление</h2>
+<p>Раньше пользователь сам задавал бюджет размышления (<code>budget_tokens</code>). Теперь иначе: <b>модель сама решает на каждом запросе, думать ли и сколько</b>. Простой фактический вопрос может получить ответ вовсе без размышления. Размышление также вплетается между вызовами инструментов: модель может подумать после прочтения файла и перед правкой, без дополнительных настроек <a href="https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost">[Steering thinking]</a>.</p>
+<p>Старый режим с бюджетом (<code>budget_tokens</code>) признан устаревшим, и модели начиная с 4.7 отклоняют такие запросы с ошибкой 400 <a href="https://platform.claude.com/docs/en/build-with-claude/extended-thinking">[Extended thinking]</a>.</p>
+<p>Управлять расходом на размышление теперь можно двумя рычагами: <code>max_tokens</code> (жёсткий потолок на размышление и ответ вместе) и <code>effort</code> (мягкая подсказка). Это уже знакомый вам effort из урока 1.</p>
+
+<h2>3. Почему нельзя выключить</h2>
+<p>Сначала факты, потом честная оговорка.</p>
+<table>
+<tr><th>Модель</th><th>Можно ли выключить размышление</th></tr>
+<tr><td>Opus 5.5</td><td>Нет. Запрос с <code>disabled</code> возвращает ошибку 400.</td></tr>
+<tr><td>Sonnet 5.5</td><td>Нет. Вместо этого есть режим <code>between_tools</code>, он убирает размышление «на входе», но не между вызовами инструментов.</td></tr>
+<tr><td>Haiku 5.5</td><td>Источники расходятся: обзор моделей разрешает <code>disabled</code> при effort high и ниже, а документация Claude Code пишет, что выключить нельзя.</td></tr>
+<tr><td>Fable</td><td>Нет.</td></tr>
+</table>
+<p class="muted">Источники: <a href="https://platform.claude.com/docs/en/models/overview">Models overview</a>, <a href="https://code.claude.com/docs/en/model-config">Model configuration</a>. В Claude Code переключатель <code>Alt+T</code> и опция в <code>/config</code> для этих моделей показывают «Thinking can't be turned off».</p>
+<div class="win"><b>Оговорка.</b> Ни одна из прочитанных страниц не объясняет <i>причину</i> запрета. Моя трактовка (это вывод, а не цитата): раз размышление адаптивное и модель сама пропускает его на простых запросах, «выключатель» заменён более гибким рычагом — effort. Хотите меньше размышлений — снижайте effort.</div>
+<p>Практические следствия:</p>
+<ul>
+<li>Меньше думать: <code>/effort low</code>. Документация прямо советует снижать effort раньше, чем править промпт.</li>
+<li>Один раз подумать глубже, не меняя сессию: слово <code>ultrathink</code> в запросе. Фразы «think hard» и подобные обычный текст, а не команда <a href="https://code.claude.com/docs/en/model-config">[Model configuration]</a>.</li>
+<li>Просьба «отвечай сразу, не думай» в промпте ненадёжна: на Sonnet 5.5, Haiku 5.5 и Fable 5.2 она не гарантированно останавливает размышление <a href="https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost">[Steering thinking]</a>.</li>
+</ul>
+
+<h2>4. Проверьте себя</h2>
+
+<div class="quiz" data-correct="2">
+  <p class="q">1. Вы нажали Ctrl+O и видите серый курсив размышления. Что это?</p>
+  <button class="opt">Дословная запись всех внутренних рассуждений модели целиком</button>
+  <button class="opt">Случайный набор слов для украшения вашего ответа</button>
+  <button class="opt">Краткий пересказ рассуждений, а не сырая запись</button>
+  <button class="opt">Копия вашего запроса из истории этой сессии</button>
+  <div class="fb">Верно: блок размышления — это краткое изложение, а полные рассуждения остаются в зашифрованной подписи.</div>
+</div>
+
+<div class="quiz" data-correct="0">
+  <p class="q">2. Размышление свёрнуто, вы его не читаете. Платите ли за него?</p>
+  <button class="opt">Да, оплачивается полностью как выходные токены</button>
+  <button class="opt">Нет, оплачиваются только видимые вам токены</button>
+  <button class="opt">Нет, пока он свёрнут в интерфейсе</button>
+  <button class="opt">Да, но только при effort max</button>
+  <div class="fb">Верно: вы платите за весь процесс размышления, независимо от того, что показано.</div>
+</div>
+
+<div class="quiz" data-correct="3">
+  <p class="q">3. Хотите, чтобы Sonnet 5.5 думал меньше. Что сработает надёжнее всего?</p>
+  <button class="opt">Написать в запросе «отвечай сразу, не думай»</button>
+  <button class="opt">Поставить в настройках бюджет размышления вручную</button>
+  <button class="opt">Выключить размышление клавишей Alt+T в сессии</button>
+  <button class="opt">Снизить уровень effort командой /effort low</button>
+  <div class="fb">Верно: бюджет вручную не принимается, Alt+T на этой модели не отключает размышление, а просьба в промпте ненадёжна. Рабочий рычаг — effort.</div>
+</div>
+
+<div class="quiz" data-correct="1">
+  <p class="q">4. Чем адаптивное размышление отличается от старого режима с бюджетом?</p>
+  <button class="opt">Бюджет задаёте вы, модель его всегда тратит</button>
+  <button class="opt">Модель сама решает: думать или нет, сколько</button>
+  <button class="opt">Размышление всегда включено и одинаково по длине</button>
+  <button class="opt">Размышление разрешено только для самых простых задач</button>
+  <div class="fb">Верно: решение принимает модель на каждом запросе, поэтому простые вопросы могут обходиться без размышления.</div>
+</div>
+
+<div class="score" id="score"></div>
+
+<h2>5. Сделайте руками (2 минуты)</h2>
+<ol>
+<li>Задайте Claude Code вопрос посложнее (например, «в чём риски транзакции @Transactional на private-методе?») и нажмите <code>Ctrl+O</code>. Найдите серый курсив.</li>
+<li>Повторите запрос, добавив <code>ultrathink</code>, и сравните длину размышления.</li>
+</ol>
+
+<h2>Что почитать</h2>
+<p><b>Основной источник:</b> <a href="https://platform.claude.com/docs/en/build-with-claude/thinking-steering-and-cost">Steering thinking</a>. Достаточно разделов про adaptive thinking и effort. Справочники: <a href="../reference/cheatsheet.html">шпаргалка</a> · <a href="../reference/glossary.html">глоссарий</a>.</p>
+
+<footer>
+<b>Что-то неясно?</b> Спрашивайте учителя (меня) в чате. Особенно про оговорку в разделе 3: это тот случай, где документация молчит.<br>
+Дальше: <a href="0003-decision-algorithm.html">урок 3 — алгоритм выбора модели и effort</a>.
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

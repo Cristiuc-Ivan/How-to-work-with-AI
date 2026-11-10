@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Шпаргалка: модель и effort</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<div class="kicker">Справочник · версия 1 (после урока 1)</div>
+<h1>Шпаргалка: модель и effort</h1>
+<p class="muted">Факты — из документации Anthropic на 10.11.2026. Раздел «Рабочая эвристика» — не из документации, это гипотеза, которую нужно калибровать опытом.</p>
+
+<h2>Модели</h2>
+<table>
+<tr><th>Модель</th><th>Алиас в Claude Code</th><th>Цена вход / выход, $/млн</th><th>Скорость</th><th>Effort по умолчанию (API)</th></tr>
+<tr><td>Fable 5.2</td><td><code>fable</code></td><td>8 / 40</td><td>средняя</td><td>high</td></tr>
+<tr><td>Opus 5.5</td><td><code>opus</code></td><td>4 / 20</td><td>средняя</td><td>medium</td></tr>
+<tr><td>Sonnet 5.5</td><td><code>sonnet</code></td><td>2 / 10</td><td>быстрая</td><td>high</td></tr>
+<tr><td>Haiku 5.5</td><td><code>haiku</code></td><td>от 0,10 / 0,50</td><td>самая быстрая</td><td>medium</td></tr>
+</table>
+<p class="muted">В Claude Code дефолты могут отличаться: проверяйте <code>/effort status</code>. Окно контекста 1 млн, максимум ответа 128 тыс. у всех четырёх.</p>
+
+<h2>Effort</h2>
+<table>
+<tr><th>Уровень</th><th>Когда по документации</th></tr>
+<tr><td><code>low</code></td><td>простые задачи, субагенты. У Haiku — чат и короткие операции с инструментами.</td></tr>
+<tr><td><code>medium</code></td><td>баланс; у Haiku 5.5 стартовая точка, включая агентный код.</td></tr>
+<tr><td><code>high</code></td><td>старт для Fable 5.2 и Sonnet 5.5 (Sonnet — если задача не агентная и не критична к задержке).</td></tr>
+<tr><td><code>xhigh</code></td><td>агентные задачи дольше 30 минут с бюджетом токенов в миллионах.</td></tr>
+<tr><td><code>max</code></td><td>потолок возможностей; для Fable — «измерить потолок».</td></tr>
+</table>
+
+<h2>Команды Claude Code</h2>
+<table>
+<tr><th>Команда</th><th>Что делает</th></tr>
+<tr><td><code>/model</code></td><td>выбор модели; сохраняется как умолчание для новых сессий (<code>s</code> — только для этой)</td></tr>
+<tr><td><code>/effort</code>, <code>/effort &lt;уровень&gt;</code>, <code>/effort status</code>, <code>/effort auto</code></td><td>ползунок, установка уровня, текущее значение, сброс сохранённого</td></tr>
+<tr><td><code>/model opusplan</code></td><td>Opus при планировании, Sonnet при выполнении</td></tr>
+<tr><td><code>ultrathink</code> в тексте запроса</td><td>углублённое размышление на этот ход (нужна версия Claude Code 2.1.311+)</td></tr>
+<tr><td><code>/clear</code></td><td>очистить контекст между несвязанными задачами</td></tr>
+</table>
+
+<h2>Правила экономии (из Manage costs)</h2>
+<ul>
+<li>Sonnet справляется с большинством задач кода; Opus — для сложных архитектурных решений и многошаговых рассуждений.</li>
+<li>Простым субагентам — Haiku.</li>
+<li>Не оставляйте Opus моделью по умолчанию без причины.</li>
+<li><code>/clear</code> между задачами; CLAUDE.md короче 200 строк.</li>
+<li>Командные агенты в plan mode расходуют примерно в 7 раз больше токенов.</li>
+</ul>
+
+<h2>Рабочая эвристика (гипотеза, не из доков)</h2>
+<table>
+<tr><th>Задача</th><th>Пробуйте сначала</th></tr>
+<tr><td>Переименование, правка SCSS, шаблонный код</td><td>Sonnet, low–medium (или Haiku)</td></tr>
+<tr><td>Фича на Spring/Angular с тестами</td><td>Sonnet, medium–high</td></tr>
+<tr><td>Spec, декомпозиция на тикеты, архитектура</td><td>Opus, high, либо <code>opusplan</code></td></tr>
+<tr><td>Ревью и поиск багов</td><td>Sonnet high; если пропускает — Opus</td></tr>
+<tr><td>Долгий автономный рефакторинг</td><td>Opus, xhigh</td></tr>
+</table>
+<p class="muted">Правило калибровки: начинайте с более дешёвой комбинации и поднимайте уровень, только если результат слабый. В документации Sonnet 5 то же самое: при недодумывании первым шагом поднимите effort.</p>
+</main>
+</body>
+</html>

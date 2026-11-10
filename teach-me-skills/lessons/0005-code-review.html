@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 5. Ревью по двум осям</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="0004-implement-tdd.html">← Урок 4</a> · Урок 5 · <a href="../reference/code-review.html">Шпаргалка: ревью</a> · <a href="../reference/skill-map.html">Карта скиллов</a></nav>
+
+<h1>/code-review: Standards и Spec</h1>
+<p class="lede">Цель: понимать, что проверяет ревью Покока, чем оно отличается от встроенного <code>/code-review</code>, и читать его отчёт. Восемь минут.</p>
+
+<div class="flow"><span>/implement</span><i>→</i><span><b>/mattpocock-skills:code-review</b></span><i>→</i><span>правки</span><i>→</i><span>/pr</span></div>
+
+<h2>Две оси, два субагента</h2>
+<p>Скилл смотрит diff между <code>HEAD</code> и зафиксированной точкой (коммит, ветка, тег, <code>main</code>) по двум осям (<a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/code-review/SKILL.md">code-review/SKILL.md</a>):</p>
+<div class="card"><b>Standards</b>Следует ли код документированным стандартам репозитория? Ищутся все файлы со стандартами, <code>CODING_STANDARDS.md</code> и <code>CONTRIBUTING.md</code> обязательны, если есть.</div>
+<div class="card"><b>Spec</b>Реализует ли код то, что просили в issue или spec? Ищет: чего не хватает, что лишнее (scope creep), что сделано, но выглядит неверно. Каждая находка цитирует строку spec.</div>
+<p>Обе оси идут <strong>параллельными субагентами</strong>, чтобы не загрязнять контексты друг друга. Отчёты выводятся раздельно, без общего рейтинга: оси разделены намеренно.</p>
+
+<h2>Зачем две, а не одна</h2>
+<table>
+<tr><th>Что получилось</th><th>Результат</th></tr>
+<tr><td>Следует всем стандартам, но делает не то</td><td>Standards pass, Spec fail</td></tr>
+<tr><td>Делает ровно то, что просили, но нарушает конвенции</td><td>Spec pass, Standards fail</td></tr>
+</table>
+<p>Если смешать оси, одна маскирует другую.</p>
+
+<h2>Откуда берётся spec</h2>
+<p>По порядку: ссылки на issue в сообщениях коммитов; путь, который вы передали; файл в <code>docs/</code>, <code>specs/</code> или <code>.scratch/</code>, подходящий к ветке. Если ничего нет, скилл спросит. Если spec нет вовсе, ось Spec пропускается, и в отчёте так и сказано.</p>
+<p class="sidenote">Ваш CLAUDE.md хранит spec вне репозитория, поэтому путь к нему вы передаёте явно, это и есть второй пункт списка.</p>
+
+<h2>Smell baseline</h2>
+<p>Поверх документированных стандартов ось Standards всегда несёт набор запахов кода по Фаулеру (<em>Refactoring</em>, гл. 3): Mysterious Name, Duplicated Code, Feature Envy, Data Clumps, Primitive Obsession, Repeated Switches, Shotgun Surgery, Divergent Change, Speculative Generality, Message Chains, Middle Man, Refused Bequest. Два правила:</p>
+<ul>
+<li><strong>Репозиторий главнее.</strong> Если документированный стандарт одобряет то, что baseline пометил бы, находка снимается.</li>
+<li><strong>Всегда суждение.</strong> Каждый запах — «возможный Feature Envy», а не жёсткое нарушение. То, что уже проверяет инструментарий (линтер), пропускается.</li>
+</ul>
+
+<h2>Не путайте с встроенным /code-review</h2>
+<p>В вашей конфигурации два ревью: встроенное <code>/code-review</code> и <code>/mattpocock-skills:code-review</code>. В SKILL.md плагина нет оси «баги»: он проверяет стандарты и соответствие spec. Поэтому вы запускаете оба: баги и стандарты с spec — разные вопросы.</p>
+
+<h2>Проверка</h2>
+<p>Первый вопрос — повторение из урока 4.</p>
+<div class="quiz" data-quiz='[
+{"q":"Куда /tdd относит рефакторинг?","opts":["После каждого зелёного теста","На стадию ревью, вне цикла","Перед написанием красного теста","Он вообще не нужен"],"correct":1,"why":"Цикл только красный → зелёный. Рефакторинг отнесён к ревью, это и есть то место, где работает этот скилл."},
+{"q":"Какие две оси у /mattpocock-skills:code-review?","opts":["Скорость и память","Баги и безопасность","Тесты и документация","Standards и Spec"],"correct":3,"why":"Standards — стандарты репозитория, Spec — соответствие issue или spec. Оси багов в этом скилле нет."},
+{"q":"Код следует всем стандартам, но делает не то, что просил spec. Итог?","opts":["Standards pass, Spec fail","Standards fail, Spec pass","Обе оси проходят","Обе оси падают"],"correct":0,"why":"Это ровно тот случай, ради которого оси разделены: одна ось не должна маскировать другую."},
+{"q":"Зачем оси идут параллельными субагентами?","opts":["Чтобы свести находки в общий рейтинг","Чтобы ускорить сам git diff","Чтобы контексты не загрязняли друг друга","Чтобы пропустить поиск стандартов"],"correct":2,"why":"Отдельные контексты не мешают друг другу. Общий рейтинг скилл намеренно не строит."},
+{"q":"Что делает скилл, если spec нигде не найден?","opts":["Придумывает spec сам","Откладывает всё ревью","Проверяет только тесты","Спрашивает, а без spec пропускает Spec"],"correct":3,"why":"Сначала спрашивает, где spec. Если его нет, ось Spec пропускается, и это отмечается в отчёте."},
+{"q":"Как относиться к находке из smell baseline?","opts":["Как к жёсткому нарушению, блокирующему слияние","Как к суждению; стандарт репозитория главнее","Игнорировать, если есть тесты","Исправлять автоматически, не спрашивая"],"correct":1,"why":"Запахи Фаулера всегда эвристика («возможный Feature Envy»). Документированный стандарт репозитория перекрывает baseline."}
+]'></div>
+
+<h2>Задание на практике</h2>
+<p>После любого тикета запустите <code>/mattpocock-skills:code-review</code>, передав путь к spec. Посмотрите на отчёт: (1) есть ли находка в Spec с цитатой строки spec? (2) помечены ли запахи как «возможные»? (3) каких находок нет в отчёте встроенного <code>/code-review</code>? Расскажите, что увидели.</p>
+
+<h2>Что читать дальше</h2>
+<p><strong>Главный источник:</strong> <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/code-review/SKILL.md">code-review/SKILL.md</a>. Для запахов в оригинале: Фаулер, <em>Refactoring</em>, гл. 3 (на неё ссылается сам скилл).</p>
+<div class="card"><b>Спроси учителя</b>Неясно, как выбрать точку отсчёта или что делать с находкой, где стандарт и Spec спорят? Спросите меня в чате.</div>
+<p class="sidenote">Следующий урок (предложение): <code>/diagnosing-bugs</code> — дисциплина отладки: сначала петля обратной связи, потом гипотезы.</p>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

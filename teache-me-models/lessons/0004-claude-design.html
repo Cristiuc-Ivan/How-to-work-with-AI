@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Урок 4. Claude Design и лимиты</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<div class="kicker">Урок 4 · около 10 минут · после <a href="0003-decision-algorithm.html">урока 3</a></div>
+<h1>Claude Design: что вы там можете выбирать, а что нет</h1>
+
+<div class="win"><b>Победа урока.</b> Вы будете знать, откуда в Claude Design списывается расход, какие рычаги у вас есть (их меньше, чем в Claude Code) и в какой момент работы возвращаются уроки 1–3.</div>
+
+<h2>0. Предупреждение о свежести данных</h2>
+<p>Claude Design быстро меняется: страницы справки, которые я прочитал, показывают только «обновлено на этой неделе», без точных дат. Всё ниже верно <b>на момент чтения (ноябрь 2026)</b>. Перепроверьте в своём интерфейсе то, что для вас критично.</p>
+
+<h2>1. Что это</h2>
+<p>Claude Design — продукт Anthropic Labs, в котором вы переписываетесь с Claude, а он строит дизайны, интерактивные прототипы, одностраничники и другое: <i>«Claude Design pairs a conversation with a canvas»</i> <a href="https://support.claude.com/en/articles/14604416-get-started-with-claude-design">[Get started]</a>. Результат можно выгрузить (.zip, PDF, PPTX, Google Slides, standalone HTML) или передать в Claude Code («Send to local coding agent» или «Send to Claude Code Web»). Презентации теперь вынесены в отдельный инструмент Claude Slides <a href="https://support.claude.com/en/articles/14604406-claude-design-admin-guide-for-team-and-enterprise-plans">[Admin guide]</a>.</p>
+<p>Отдельная версия claude.ai/design, по тексту справки, работает до 14 декабря 2026. Что именно её заменит, в прочитанных страницах не детализировано: проверьте в интерфейсе. Доступ есть и из Claude Code через команды <code>/design</code> и <code>/design-sync</code>.</p>
+
+<h2>2. Откуда списывается расход</h2>
+<p>Здесь изменилось недавно, и старые обзоры в интернете устарели. Раньше у Claude Design был свой недельный лимит. Теперь справка говорит: расход идёт <b>из общего пула вместе с остальным Claude, включая Claude Code</b>, отдельной квоты на дизайн нет <a href="https://support.claude.com/en/articles/14604416-get-started-with-claude-design">[Get started]</a>.</p>
+<p>Практический смысл: час в Claude Design съедает те же лимиты, на которые вы пишете код. Когда лимит кончился, Claude Design недоступен до сброса. Если включены usage credits, можно продолжить сверх лимита; по справке они списываются по стандартным API-тарифам <a href="https://support.claude.com/en/articles/12429409-manage-extra-usage-for-paid-claude-plans">[Usage credits]</a>.</p>
+
+<h2>3. Какие у вас рычаги</h2>
+<p>Модель и effort в прочитанных страницах справки <b>не описаны как настройки пользователя</b>. В анонсе от апреля 2026 сказано, что Claude Design работал на Claude Opus 4.7 <a href="https://www.anthropic.com/news/claude-design-anthropic-labs">[Анонс]</a>, но это апрельская формулировка. Сегодня ни справка, ни я не можем сказать, какая модель стоит внутри и можно ли её менять. Это пробел, а не отсутствие настройки: посмотрите в интерфейсе.</p>
+<p>Что справка говорит о расходе: <i>«Complex projects with large codebases or many iterations consume more usage»</i>. Отсюда три рычага, которые остаются вам (по смыслу они совпадают с уроком 1: меньше входа, меньше циклов):</p>
+<ul>
+<li><b>Размер контекста.</b> Не подключайте весь монорепозиторий без необходимости. Для крупных репозиториев справка советует связывать их через Claude Code и синхронизировать <code>/design-sync</code>.</li>
+<li><b>Число итераций.</b> Справка советует начинать с простого и добавлять сложность слоями. Для вашей цели это ещё и способ тратить меньше: сначала черновик, потом уточнения.</li>
+<li><b>Новый чат.</b> Общий совет из справки по usage credits — начинать новые разговоры и использовать проекты. Он не специфичен для Design, но тот же принцип, что <code>/clear</code>: длинная история стоит дороже.</li>
+</ul>
+<p class="muted">Совет «импортируйте полный дизайн-систему» из справки относится к качеству результата, не к экономии. Но он может сократить число правок на цвета и шрифты.</p>
+
+<h2>4. Где возвращаются уроки 1–3</h2>
+<p>Как только дизайн передан в Claude Code, вы снова управляете моделью и effort: <code>/model</code>, <code>/effort</code>, лесенка из урока 3. Разумное разделение труда (моя эвристика): сначала дешёвый черновик в Claude Design, потом реализация макета в Angular/SCSS в Claude Code на Sonnet · medium.</p>
+
+<h2>5. Проверьте себя</h2>
+
+<div class="quiz" data-correct="1">
+  <p class="q">1. Откуда списывается расход Claude Design сейчас?</p>
+  <button class="opt">Из отдельного недельного лимита только для дизайна</button>
+  <button class="opt">Из общего лимита вместе с Claude Code</button>
+  <button class="opt">Из отдельной оплаты за каждый созданный макет</button>
+  <button class="opt">Из бесплатной квоты, не затрагивающей общие лимиты</button>
+  <div class="fb">Верно: раньше был отдельный недельный лимит, теперь весь расход идёт из общих лимитов плана. Старые обзоры в интернете могут писать иначе.</div>
+</div>
+
+<div class="quiz" data-correct="3">
+  <p class="q">2. Что по справке увеличивает расход в Claude Design?</p>
+  <button class="opt">Экспорт готового макета в формат PDF позже</button>
+  <button class="opt">Выбор тёмной темы в интерфейсе приложения</button>
+  <button class="opt">Просмотр готового макета без правок и вопросов</button>
+  <button class="opt">Крупные кодовые базы и множество итераций правок</button>
+  <div class="fb">Верно: справка прямо называет сложные проекты с большими кодовыми базами и многими итерациями.</div>
+</div>
+
+<div class="quiz" data-correct="0">
+  <p class="q">3. Лимит исчерпан, а макет нужен срочно. Что предусмотрено?</p>
+  <button class="opt">Включить usage credits и продолжить за отдельную плату</button>
+  <button class="opt">Подождать: Design продолжит работу в урезанном режиме</button>
+  <button class="opt">Переключиться на Haiku, и лимит перестанет считаться</button>
+  <button class="opt">Выключить размышление, тогда лимиты не расходуются совсем</button>
+  <div class="fb">Верно: без credits Claude Design недоступен до сброса, с credits можно продолжить по стандартным API-тарифам. Смена модели или размышления лимит не отключает.</div>
+</div>
+
+<div class="quiz" data-correct="2">
+  <p class="q">4. Как передать готовый дизайн в код для реализации?</p>
+  <button class="opt">Только скриншотом в чат, других способов не существует</button>
+  <button class="opt">Только вручную, переписывая все стили с нуля</button>
+  <button class="opt">Передачей в Claude Code: локальному агенту или веб-версии</button>
+  <button class="opt">Экспортом в таблицу Excel и импортом обратно в код</button>
+  <div class="fb">Верно: в справке есть передача в Claude Code, и дальше вы управляете моделью и effort сами.</div>
+</div>
+
+<div class="score" id="score"></div>
+
+<h2>6. Сделайте руками (3 минуты)</h2>
+<ol>
+<li>Откройте Claude Design и поищите в интерфейсе выбор модели или уровня усилий. Напишите мне, нашли ли.</li>
+<li>Откройте страницу usage в своём плане и запомните процент. Сделайте один небольшой дизайн, посмотрите, сколько он съел. Так вы получите свою «цену» одного макета.</li>
+</ol>
+
+<h2>Что почитать</h2>
+<p><b>Основной источник:</b> <a href="https://support.claude.com/en/articles/14604416-get-started-with-claude-design">Get started with Claude Design</a> — разделы про лимиты и известные ограничения. Анонс: <a href="https://www.anthropic.com/news/claude-design-anthropic-labs">Introducing Claude Design</a> (17 апреля 2026, часть данных устарела).</p>
+<p>Справочники: <a href="../reference/cheatsheet.html">шпаргалка</a> · <a href="../reference/glossary.html">глоссарий</a>.</p>
+
+<footer>
+<b>Что-то неясно?</b> Спрашивайте учителя (меня) в чате: особенно про то, что вы видите в своём интерфейсе Claude Design и чего нет в уроке.
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Алгоритм выбора модели и effort</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<div class="kicker">Справочник · версия 1 (после урока 3)</div>
+<h1>Алгоритм выбора модели и effort</h1>
+<p class="muted">Эвристика на основе принципов из документации Anthropic. Не официальная таблица. Калибруйте на своих задачах.</p>
+
+<h2>Шаг 1. Дороговизна ошибки → стартовая комбинация</h2>
+<table>
+<tr><th>Задача</th><th>Старт</th></tr>
+<tr><td>Переименование, SCSS, шаблонный код</td><td>Sonnet · low–medium</td></tr>
+<tr><td>Простой субагент, поиск по репозиторию</td><td>Haiku · low</td></tr>
+<tr><td>Фича по тикету, тесты, обычный код</td><td>Sonnet · medium (→ high)</td></tr>
+<tr><td>Spec, тикеты, архитектура, безопасность, миграции</td><td>Opus · high или <code>opusplan</code></td></tr>
+<tr><td>Ревью, поиск багов</td><td>Sonnet · high; не находит — Opus · high</td></tr>
+</table>
+
+<h2>Шаг 2. Долго и автономно (более 30 минут)?</h2>
+<p>Да → Opus · xhigh. Нет → остаёмся на шаге 1.</p>
+
+<h2>Шаг 3. Результат слабый — эскалация по порядку</h2>
+<ol>
+<li>Поднять effort на той же модели.</li>
+<li>Разово добавить <code>ultrathink</code> в запрос.</li>
+<li>Перейти на модель выше (Sonnet → Opus).</li>
+<li>Fable — только если Opus на высоком effort не справился.</li>
+</ol>
+
+<h2>Всегда</h2>
+<ul>
+<li><code>/clear</code> между несвязанными задачами.</li>
+<li>Размышление не выключить на Opus 5.5, Sonnet 5.5, Fable: снижайте effort.</li>
+<li>Проверьте <code>/effort status</code>, чтобы знать фактическое значение.</li>
+</ul>
+
+<h2>Открытые вопросы (проверять опытом)</h2>
+<ul>
+<li>Что выгоднее на границе: Opus · medium или Sonnet · high?</li>
+<li>На каких ваших задачах low действительно достаточно?</li>
+</ul>
+</main>
+</body>
+</html>

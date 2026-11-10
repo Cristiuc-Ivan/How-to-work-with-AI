@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шпаргалка: диагностика</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="../lessons/0006-diagnosing-bugs.html">← Урок 6</a> · <a href="skill-map.html">Карта скиллов</a></nav>
+<h1>/diagnosing-bugs</h1>
+<p class="lede">Источник: <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/diagnosing-bugs/SKILL.md">diagnosing-bugs/SKILL.md</a>.</p>
+
+<div class="flow"><span>1 петля</span><i>→</i><span>2 repro + минимум</span><i>→</i><span>3 гипотезы</span><i>→</i><span>4 приборы</span><i>→</i><span>5 фикс + тест</span><i>→</i><span>6 уборка</span></div>
+
+<h2>Чек-лист петли (фаза 1)</h2>
+<ul>
+<li>Одна команда, уже запущенная.</li>
+<li>Красная именно на этом баге (точный симптом).</li>
+<li>Детерминированная (для плавающих — высокая частота).</li>
+<li>Быстрая: секунды.</li>
+<li>Запускается агентом без человека.</li>
+</ul>
+
+<h2>Гипотеза</h2>
+<p>3–5 штук, ранжированных. Формат: «Если причина X, то изменение Y уберёт баг / изменение Z усилит». Показать пользователю до проверки.</p>
+
+<h2>Замеры</h2>
+<ul>
+<li>Отладчик лучше логов; логи точечные.</li>
+<li>Префикс <code>[DEBUG-xxxx]</code> на каждый лог.</li>
+<li>Одна переменная за раз.</li>
+<li>Перформанс: базовый замер, затем bisect.</li>
+</ul>
+
+<h2>Конец</h2>
+<ul>
+<li>Петля из фазы 1 больше не красная.</li>
+<li>Регрессионный тест зелёный, либо отсутствие шва записано как находка.</li>
+<li>Метки DEBUG удалены, прототипы убраны.</li>
+<li>Верная гипотеза — в сообщении коммита или PR.</li>
+<li>Секреты везде заменены на <code>&lt;REDACTED&gt;</code>.</li>
+</ul>
+</main>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шпаргалка: ситуация → скилл</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="../lessons/0001-karta-skillov.html">← Урок 1</a></nav>
+<h1>Ситуация → скилл</h1>
+<p class="lede">Источник: <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/ask-matt/SKILL.md">ask-matt/SKILL.md</a>. Дополняется по ходу уроков.</p>
+
+<h2>Основной флоу</h2>
+<div class="flow"><span>/grill-with-docs</span><i>→</i><span>/to-spec</span><i>→</i><span>/to-tickets</span><i>→</i><span>/implement</span><i>→</i><span>/code-review</span></div>
+
+<table>
+<tr><th>Ситуация</th><th>Скилл</th></tr>
+<tr><td>Есть идея, она сырая</td><td><code>/grill-with-docs</code> (без репозитория: <code>/grill-me</code>)</td></tr>
+<tr><td>Идея обсуждена, нужен документ</td><td><code>/to-spec</code></td></tr>
+<tr><td>Spec надо порезать на куски</td><td><code>/to-tickets</code></td></tr>
+<tr><td>Строить тикет или короткую работу</td><td><code>/implement</code> (внутри <code>/tdd</code>)</td></tr>
+<tr><td>Строить весь spec параллельно</td><td><code>/implement-spec</code></td></tr>
+<tr><td>Проверить diff</td><td><code>/code-review</code> (Standards + Spec)</td></tr>
+<tr><td>Оформить PR</td><td><code>/pr</code></td></tr>
+<tr><td>После сессии улучшить среду агента</td><td><code>/retro</code></td></tr>
+</table>
+
+<h2>On-ramps и standalone</h2>
+<table>
+<tr><th>Ситуация</th><th>Скилл</th></tr>
+<tr><td>Пришли чужие баги и запросы</td><td><code>/triage</code></td></tr>
+<tr><td>Упрямый или плавающий баг</td><td><code>/diagnosing-bugs</code></td></tr>
+<tr><td>Огромная туманная работа, больше сессии</td><td><code>/wayfinder</code> → затем <code>/to-spec</code></td></tr>
+<tr><td>Надо увидеть, как работает идея</td><td><code>/prototype</code></td></tr>
+<tr><td>Нужны факты из первоисточников</td><td><code>/research</code></td></tr>
+<tr><td>Агент сказал непонятно</td><td><code>/wait-what</code></td></tr>
+<tr><td>Продолжить в другой папке или у коллеги</td><td><code>/handoff</code></td></tr>
+<tr><td>Шаги, которые может сделать только человек</td><td><code>/wizard</code></td></tr>
+<tr><td>Код развалился на «ком грязи»</td><td><code>/improve-codebase-architecture</code></td></tr>
+<tr><td>Забыл, какой скилл нужен</td><td><code>/ask-matt</code></td></tr>
+</table>
+</main>
+</body>
+</html>

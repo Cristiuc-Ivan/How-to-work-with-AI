@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шпаргалка: grilling</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="../lessons/0002-grill-with-docs.html">← Урок 2</a> · <a href="skill-map.html">Карта скиллов</a></nav>
+<h1>Grilling и domain-modeling</h1>
+<p class="lede">Источники: <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/productivity/grilling/SKILL.md">grilling</a>, <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/domain-modeling/SKILL.md">domain-modeling</a>.</p>
+
+<h2>Цикл раунда</h2>
+<div class="flow"><span>дерево решений</span><i>→</i><span>frontier</span><i>→</i><span>раунд: Q + рекомендация</span><i>→</i><span>ответы</span><i>→</i><span>новый frontier</span></div>
+<p>Конец: frontier пуст, вы подтвердили общее понимание. До этого агент не действует.</p>
+
+<h2>Кто за что</h2>
+<table>
+<tr><th>Агент</th><th>Вы</th></tr>
+<tr><td>Факты: код, файлы, окружение (субагентом)</td><td>Решения</td></tr>
+<tr><td>Рекомендует ответ на каждый вопрос</td><td>«Да» принимает рекомендацию</td></tr>
+</table>
+
+<h2>Что делает domain-modeling</h2>
+<table>
+<tr><th>Приём</th><th>Пример</th></tr>
+<tr><td>Возразить против глоссария</td><td>«Глоссарий определяет cancellation как X, а вы имеете в виду Y»</td></tr>
+<tr><td>Уточнить размытое слово</td><td>«Account — это Customer или User?»</td></tr>
+<tr><td>Проверить сценарием</td><td>Придумать граничный случай</td></tr>
+<tr><td>Сверить с кодом</td><td>«Код отменяет заказ целиком, а вы говорите про частичную отмену»</td></tr>
+<tr><td>Записать сразу</td><td>Обновить GLOSSARY.md в момент решения</td></tr>
+</table>
+
+<h2>ADR: три условия сразу</h2>
+<ol><li>Трудно откатить.</li><li>Неочевидно без контекста.</li><li>Реальный компромисс между вариантами.</li></ol>
+</main>
+</body>
+</html>

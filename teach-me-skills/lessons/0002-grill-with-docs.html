@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 2. Grill-with-docs</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="0001-karta-skillov.html">← Урок 1</a> · Урок 2 · <a href="../reference/grilling.html">Шпаргалка: grilling</a> · <a href="../reference/skill-map.html">Карта скиллов</a></nav>
+
+<h1>/grill-with-docs: интервью и общий язык</h1>
+<p class="lede">Цель: понимать, из чего состоит первый шаг вашего флоу, как читать раунд вопросов и что скилл пишет на диск. Семь минут.</p>
+
+<h2>Это два скилла в одном</h2>
+<p>Файл <code>grill-with-docs/SKILL.md</code> почти пуст: он просто вызывает два других скилла, <code>grilling</code> и <code>domain-modeling</code> (<a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/grill-with-docs/SKILL.md">источник</a>).</p>
+<div class="card"><b>grilling: как спрашивать</b>Интервью до общего понимания. Ничего не пишет на диск.</div>
+<div class="card"><b>domain-modeling: что записывать</b>Уточняет термины и пишет <code>GLOSSARY.md</code> и ADR прямо по ходу.</div>
+<p class="sidenote">Поэтому <code>/grill-me</code> — тот же grilling без записи: для случаев, когда рабочей папки нет (<a href="../reference/skill-map.html">карта</a>).</p>
+
+<h2>Как устроен grilling</h2>
+<p>Агент строит <strong>дерево решений</strong>: каждое решение порождает зависящие от него. Работает <strong>раундами</strong> (<a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/productivity/grilling/SKILL.md">grilling/SKILL.md</a>):</p>
+<ol>
+<li><strong>Frontier</strong> — все решения, чьи предпосылки уже закрыты. Их можно спросить прямо сейчас, не гадая.</li>
+<li>Весь frontier задаётся <em>одним раундом</em>: вопросы пронумерованы, у каждого есть рекомендованный ответ, сформулированный так, чтобы «да» его принимало.</li>
+<li>Вы отвечаете, дерево перестраивается, считается новый frontier. Вопрос, зависящий от открытого, уходит в следующий раунд.</li>
+</ol>
+<div class="card"><b>Как выглядит вопрос</b>
+<code>❓ Q1 - Название: …</code><br><code>➡️ рекомендованный ответ</code><br>
+Вам достаточно ответить «да», если согласны.</div>
+<p><strong>Разделение труда:</strong> факты (что в коде, в файлах) ищет агент, при необходимости субагентом, и не спрашивает вас о том, что можно выяснить самому. <em>Решения</em> принимаете вы. Сессия окончена, когда frontier пуст, и агент не действует, пока вы не подтвердили общее понимание.</p>
+
+<h2>Что скилл пишет на диск</h2>
+<p>По (<a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/domain-modeling/SKILL.md">domain-modeling/SKILL.md</a>), по ходу интервью агент:</p>
+<ul>
+<li><strong>возражает</strong>, если ваш термин расходится с <code>GLOSSARY.md</code>;</li>
+<li><strong>уточняет</strong> размытые слова: «account — это Customer или User?»;</li>
+<li><strong>проверяет сценариями</strong> граничные случаи и <strong>сверяется с кодом</strong>;</li>
+<li><strong>обновляет GLOSSARY.md сразу</strong>, не копит на потом.</li>
+</ul>
+<p>В глоссарии только определения терминов, без деталей реализации. Файлы создаются лениво, когда появляется что записать.</p>
+<div class="card"><b>ADR — редко</b>Предлагается, только если выполнены <em>все три</em> условия: решение трудно откатить; без контекста оно удивит читателя; за ним стоял реальный компромисс. Нет одного из трёх — ADR не нужен.</div>
+
+<h2>Зачем всё это</h2>
+<p>Автор приводит пример из <a href="https://github.com/mattpocock/skills#2-the-agent-is-way-too-verbose">README</a>: вместо «проблема, когда урок внутри раздела курса становится "реальным", то есть получает место в файловой системе» достаточно «проблема с каскадом материализации». Общий язык делает разговор короче, а имена в коде и файлах единообразными, поэтому агент тратит меньше токенов на рассуждения.</p>
+<p class="sidenote">Заметка о вашем окружении: в README соглашение названо <code>GLOSSARY.md</code> (раньше было <code>CONTEXT.md</code>), а в вашем CLAUDE.md упоминается <code>CONTEXT.md</code>. Какое имя реально использует ваш проект, стоит проверить в репозитории.</p>
+
+<h2>Проверка</h2>
+<p>Первый вопрос — повторение из урока 1 (так запоминается надёжнее).</p>
+<div class="quiz" data-quiz='[
+{"q":"Рабочей папки нет, нужно просто отшлифовать план. Какой скилл?","opts":["/grill-with-docs","/to-spec","/grill-me","/wayfinder"],"correct":2,"why":"/grill-me — то же интервью без записи на диск. /grill-with-docs лучше, когда есть репозиторий, куда писать след."},
+{"q":"Из каких скиллов состоит /grill-with-docs?","opts":["tdd и implement","research и prototype","grilling и domain-modeling","to-spec и to-tickets"],"correct":2,"why":"Его SKILL.md только вызывает grilling (как спрашивать) и domain-modeling (что записывать)."},
+{"q":"Что такое frontier в раунде вопросов?","opts":["Решения с уже закрытыми предпосылками","Все вопросы за всю сессию","Вопросы, уже получившие ответ","Вопросы только про код проекта"],"correct":0,"why":"Frontier — вопросы, которые можно задать сейчас, не гадая. Остальные ждут ответов на предшествующие."},
+{"q":"Вопрос требует факта из кода: какой фреймворк тестов используется. Кто выясняет?","opts":["Вы, ответом в раунде","Коллега по команде","Никто, вопрос пропускается","Агент, через субагента"],"correct":3,"why":"Факты — работа агента, решения — ваши. Спрашивать то, что можно найти самому, grilling запрещает."},
+{"q":"Когда domain-modeling предлагает записать ADR?","opts":["После каждого принятого решения","Если выполнены все три условия","В конце каждой сессии всегда","Только по вашей явной просьбе"],"correct":1,"why":"Трудно откатить, неочевидно без контекста, реальный компромисс. Нет одного из трёх — ADR не создаётся."},
+{"q":"Что НЕ должно попадать в GLOSSARY.md?","opts":["Определения терминов","Алиасы с пометкой Avoid","Группы по подзаголовкам","Детали реализации"],"correct":3,"why":"Глоссарий — только язык предметной области. Не спецификация, не черновик и не склад решений по реализации."}
+]'></div>
+
+<h2>Задание на практике</h2>
+<p>Возьмите реальную небольшую идею и запустите <code>/mattpocock-skills:grill-with-docs</code>. Посмотрите на первый раунд: есть ли у каждого вопроса рекомендованный ответ? Ответили ли вы «да» хотя бы на один? Появился ли <code>GLOSSARY.md</code>? Расскажите мне, что увидели, и я зафиксирую это в записи об обучении.</p>
+
+<h2>Что читать дальше</h2>
+<p><strong>Главный источник:</strong> <a href="https://github.com/mattpocock/skills#2-the-agent-is-way-too-verbose">README, раздел «#2: The Agent Is Way Too Verbose»</a> и локальные <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/productivity/grilling/SKILL.md">grilling</a> / <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/domain-modeling/SKILL.md">domain-modeling</a>.</p>
+<div class="card"><b>Спроси учителя</b>Неясно, чем ADR отличается от записи в глоссарии или как grill связан со следующим шагом <code>/to-spec</code>? Спросите меня в чате, я сверюсь с SKILL.md.</div>
+<p class="sidenote">Следующий урок (предложение): <code>/to-spec</code> и <code>/to-tickets</code>: как из интервью получается spec и тонкие сквозные тикеты.</p>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

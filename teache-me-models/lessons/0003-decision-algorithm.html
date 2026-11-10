@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Урок 3. Алгоритм выбора</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<div class="kicker">Урок 3 · около 12 минут · после <a href="0002-thinking.html">урока 2</a></div>
+<h1>Алгоритм выбора модели и effort за пару секунд</h1>
+
+<div class="win"><b>Победа урока.</b> У вас будет короткая лесенка из трёх вопросов, по которой вы за пару секунд выбираете стартовую комбинацию «модель · effort» и знаете, что поднимать первым, если результат слабый.</div>
+
+<h2>0. Честно о том, что здесь из документации, а что нет</h2>
+<p>Документация даёт <b>принципы</b>, но не готовую таблицу «ваша задача → комбинация». Поэтому урок состоит из двух слоёв:</p>
+<ul>
+<li><b>Факты</b> (со ссылками): они ограничивают выбор.</li>
+<li><b>Моя эвристика</b> (помечена): стартовая точка для вашего опыта. Её нужно проверять и подстраивать.</li>
+</ul>
+<p>Даже сами источники слегка расходятся: обзор моделей советует «если сомневаетесь, начните с Opus 5.5» <a href="https://platform.claude.com/docs/en/models/overview">[Models overview]</a>, а страница о расходах Claude Code — Sonnet для большинства задач кода, Opus для сложных архитектурных решений <a href="https://code.claude.com/docs/en/costs">[Manage costs]</a>. Для вашей цели (экономить) я иду за вторым, потому что вы работаете именно в Claude Code.</p>
+
+<h2>1. Факты, на которых стоит алгоритм</h2>
+<ul>
+<li>Fable берите, когда Opus 5.5 на повышенном effort не справляется на ваших проверках <a href="https://platform.claude.com/docs/en/models/overview">[Models overview]</a>.</li>
+<li>Opus и Sonnet отличаются ценой вдвое (урок 1). Haiku сильно дешевле и подходит для простого и массового.</li>
+<li><code>low</code> документация прямо рекомендует для простых задач, например субагентов; <code>xhigh</code> — для агентных задач дольше 30 минут <a href="https://platform.claude.com/docs/en/build-with-claude/effort">[Effort]</a>.</li>
+<li>Если Sonnet недодумывает, первым шагом поднимайте effort, а не меняйте модель <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5">[Prompting Sonnet 5]</a>.</li>
+<li>Обратная сторона: низкий effort на длинной агентной задаче повышает риск, что модель пропустит поиск или проверку <a href="https://platform.claude.com/docs/en/build-with-claude/effort">[Effort]</a> (там это сказано про Haiku 5.5).</li>
+</ul>
+
+<h2>2. Лесенка из трёх вопросов (моя эвристика)</h2>
+<ol>
+<li><b>Насколько дорога ошибка?</b>
+  <ul>
+  <li>Дёшево (переименование, SCSS, шаблонный код, поиск по репозиторию): Sonnet · low–medium. Субагентам — Haiku · low.</li>
+  <li>Средне (фича по готовому тикету, тесты): Sonnet · medium, при необходимости high.</li>
+  <li>Дорого (spec, декомпозиция, архитектура, безопасность, миграции): Opus · high или <code>opusplan</code>.</li>
+  </ul>
+</li>
+<li><b>Это долгая автономная работа (больше 30 минут)?</b> Да: Opus · xhigh. Нет: оставайтесь на ответе первого вопроса.</li>
+<li><b>Результат слабый?</b> Эскалируйте в таком порядке: сначала effort на той же модели → разово <code>ultrathink</code> → модель выше → Fable. Модель выше всегда дороже, поэтому она идёт последней.</li>
+</ol>
+<p class="muted">Пока неизвестно, что выгоднее на границе: Opus · medium или Sonnet · high. Документация этого не сравнивает. Именно это вы будете выяснять опытом (см. задание).</p>
+
+<h2>3. Тренировка: подберите стартовую комбинацию</h2>
+<p>Вопросы ниже проверяют, применяете ли вы лесенку, а не «единственно верный ответ природы».</p>
+
+<div class="quiz" data-correct="2">
+  <p class="q">1. Переименовать поле в 12 файлах Angular-компонентов. Стартуем с:</p>
+  <button class="opt">Fable · max</button>
+  <button class="opt">Opus · xhigh</button>
+  <button class="opt">Sonnet · low</button>
+  <button class="opt">Opus · high</button>
+  <div class="fb">Правка механическая, ошибка дешёвая и проверяется компилятором. Тяжёлые модели здесь только жгут лимиты.</div>
+</div>
+
+<div class="quiz" data-correct="0">
+  <p class="q">2. Написать spec и разбить на тикеты фичу с авторизацией. Стартуем с:</p>
+  <button class="opt">Opus · high</button>
+  <button class="opt">Haiku · low</button>
+  <button class="opt">Sonnet · low</button>
+  <button class="opt">Fable · max</button>
+  <div class="fb">Ошибка дорогая (она размножится по всем тикетам, плюс безопасность). Fable·max избыточен: Fable берут, когда Opus на повышенном effort не справился.</div>
+</div>
+
+<div class="quiz" data-correct="3">
+  <p class="q">3. Фича на Spring по готовому тикету с тестами. Стартуем с:</p>
+  <button class="opt">Haiku · low</button>
+  <button class="opt">Opus · xhigh</button>
+  <button class="opt">Fable · max</button>
+  <button class="opt">Sonnet · medium</button>
+  <div class="fb">Обычная разработка с проверкой тестами: дешёвая быстрая модель со средним effort, потом поднимаем по результату.</div>
+</div>
+
+<div class="quiz" data-correct="1">
+  <p class="q">4. Автономный рефакторинг модуля на час с прогоном тестов. Стартуем с:</p>
+  <button class="opt">Sonnet · low</button>
+  <button class="opt">Opus · xhigh</button>
+  <button class="opt">Haiku · medium</button>
+  <button class="opt">Sonnet · medium</button>
+  <div class="fb">Агентная задача дольше 30 минут: именно для неё документация описывает xhigh, а низкий effort рискует пропустить проверки.</div>
+</div>
+
+<div class="quiz" data-correct="2">
+  <p class="q">5. Субагент ищет все места использования метода. Стартуем с:</p>
+  <button class="opt">Opus · high</button>
+  <button class="opt">Fable · high</button>
+  <button class="opt">Haiku · low</button>
+  <button class="opt">Opus · xhigh</button>
+  <div class="fb">Простая и массовая работа, результат легко проверить. Простым субагентам рекомендуют Haiku и low.</div>
+</div>
+
+<div class="quiz" data-correct="0">
+  <p class="q">6. Sonnet · medium дал поверхностное ревью. Первым действием:</p>
+  <button class="opt">Поднять effort до high, модель оставить той же</button>
+  <button class="opt">Сразу перейти на Fable и поставить effort max</button>
+  <button class="opt">Переписать весь запрос заново, ничего не меняя больше</button>
+  <button class="opt">Очистить контекст и больше ничего не менять совсем</button>
+  <div class="fb">Первый шаг эскалации — effort на той же модели: это самый дешёвый рычаг.</div>
+</div>
+
+<div class="score" id="score"></div>
+
+<h2>4. Задание на неделю: превратить эвристику в свою таблицу</h2>
+<p>Сохраните три-пять реальных задач и для каждой запишите: комбинацию, результат (хорошо / слабо) и поднимали ли что-то. Через неделю у вас будет ваша таблица «Opus·medium против Sonnet·high» на ваших задачах Spring и Angular. Принесите её, и мы поправим шпаргалку.</p>
+<p>Готовая страница алгоритма для печати: <a href="../reference/decision-algorithm.html">справочник «Алгоритм выбора»</a>.</p>
+
+<h2>Что почитать</h2>
+<p><b>Основной источник:</b> <a href="https://code.claude.com/docs/en/costs">Manage costs</a> (раздел про выбор модели и effort) и <a href="https://platform.claude.com/docs/en/build-with-claude/effort">Effort</a> (рекомендации по каждой модели).</p>
+
+<footer>
+<b>Что-то неясно?</b> Спрашивайте учителя (меня): особенно если ваша задача не вписывается в лесенку, это повод её улучшить.<br>
+Справочники: <a href="../reference/cheatsheet.html">шпаргалка</a> · <a href="../reference/glossary.html">глоссарий</a>.
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

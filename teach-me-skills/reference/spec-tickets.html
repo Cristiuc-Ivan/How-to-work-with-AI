@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шпаргалка: spec и тикеты</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="../lessons/0003-to-spec-to-tickets.html">← Урок 3</a> · <a href="skill-map.html">Карта скиллов</a></nav>
+<h1>Spec и тикеты</h1>
+<p class="lede">Источники: <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/to-spec/SKILL.md">to-spec</a>, <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/to-tickets/SKILL.md">to-tickets</a>.</p>
+
+<h2>Шаблон spec</h2>
+<ol>
+<li>Problem Statement</li><li>Solution</li><li>User Stories (длинный список «As a…, I want…, so that…»)</li>
+<li>Implementation Decisions (без путей и кода)</li><li>Testing Decisions (швы, что тестировать, прецеденты)</li>
+<li>Out of Scope</li><li>Further Notes</li>
+</ol>
+
+<h2>Правила среза</h2>
+<ul>
+<li>Узкий, но полный путь через все слои.</li>
+<li>Проверяем или показываем сам по себе.</li>
+<li>Влезает в одно свежее окно контекста.</li>
+<li>Prefactoring идёт первым.</li>
+<li>У каждого тикета свои blocking edges; без блокеров — можно начинать сразу.</li>
+</ul>
+
+<h2>Шаблон тикета</h2>
+<table>
+<tr><th>Поле</th><th>Содержимое</th></tr>
+<tr><td>What to build</td><td>Поведение целиком, с позиции пользователя, не список слоёв</td></tr>
+<tr><td>Blocked by</td><td>Тикеты-блокеры или «None»</td></tr>
+<tr><td>Acceptance criteria</td><td>Чек-лист</td></tr>
+</table>
+
+<h2>Широкий рефакторинг</h2>
+<div class="flow"><span>expand</span><i>→</i><span>migrate (пачки)</span><i>→</i><span>contract</span></div>
+</main>
+</body>
+</html>

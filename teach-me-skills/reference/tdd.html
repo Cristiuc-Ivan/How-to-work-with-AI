@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шпаргалка: TDD</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="../lessons/0004-implement-tdd.html">← Урок 4</a> · <a href="skill-map.html">Карта скиллов</a></nav>
+<h1>/implement и /tdd</h1>
+<p class="lede">Источники: <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/implement/SKILL.md">implement</a>, <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/tdd/SKILL.md">tdd</a>.</p>
+
+<h2>Сценарий /implement</h2>
+<div class="flow"><span>назвать тикет</span><i>→</i><span>/tdd на швах</span><i>→</i><span>типы + тест-файлы</span><i>→</i><span>полный прогон в конце</span><i>→</i><span>/code-review</span><i>→</i><span>коммит</span></div>
+
+<h2>Правила цикла</h2>
+<ol>
+<li>Red перед green.</li>
+<li>Один шов, один тест, одна реализация за цикл.</li>
+<li>Рефакторинг вне цикла, на ревью.</li>
+</ol>
+
+<h2>Анти-паттерны тестов</h2>
+<table>
+<tr><th>Название</th><th>Признак</th></tr>
+<tr><td>Implementation-coupled</td><td>Мокает свои классы, проверяет вызовы, ломается при рефакторинге</td></tr>
+<tr><td>Tautological</td><td>Ожидаемое значение считается так же, как в коде</td></tr>
+<tr><td>Horizontal slicing</td><td>Все тесты сначала, весь код потом</td></tr>
+</table>
+
+<h2>Мокаем</h2>
+<table>
+<tr><th>Да (границы системы)</th><th>Нет</th></tr>
+<tr><td>Внешние API, время, случайность; иногда БД и файлы</td><td>Свои классы, внутренние зависимости, всё, что контролируете</td></tr>
+</table>
+</main>
+</body>
+</html>

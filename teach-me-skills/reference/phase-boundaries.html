@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Шпаргалка: границы фаз</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top"><a href="../lessons/0009-granitsy-faz.html">← Урок 9</a> · <a href="skill-map.html">Карта скиллов</a></nav>
+<h1>Границы фаз</h1>
+<p class="lede">Источник: <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/ask-matt/PHASE-BOUNDARIES.md">PHASE-BOUNDARIES.md</a>. Решение принимается только на границе, не посреди фазы.</p>
+
+<h2>Дерево: первое «да» побеждает</h2>
+<table>
+<tr><th>#</th><th>Вопрос</th><th>Если да</th></tr>
+<tr><td>1</td><td>Можно продолжить? (нужен как первоисточник или хватает «умной зоны» ≈150k)</td><td>Continue</td></tr>
+<tr><td>2</td><td>Контекст не нужен дальше?</td><td><code>/clear</code></td></tr>
+<tr><td>3</td><td>Работа уходит в другой инструмент, каталог, к коллеге; или побочная задача посреди фазы?</td><td><code>/handoff</code></td></tr>
+<tr><td>4</td><td>Можно сделать без вас?</td><td>Субагент</td></tr>
+<tr><td>5</td><td>Иначе</td><td><code>/compact &lt;что сохранить&gt;</code></td></tr>
+</table>
+
+<h2>Заметки</h2>
+<ul>
+<li>Всё, кроме Continue, превращает первичный источник во вторичный (сводку).</li>
+<li>Ошибка <code>/clear</code> необратима: теряется «почему».</li>
+<li>Опрос → реализация: всегда Continue.</li>
+<li><code>/handoff</code> пишет в %TEMP%, не дублирует spec и коммиты, убирает секреты.</li>
+<li><code>/wait-what</code>: пересказать непонятное простым языком.</li>
+</ul>
+</main>
+</body>
+</html>

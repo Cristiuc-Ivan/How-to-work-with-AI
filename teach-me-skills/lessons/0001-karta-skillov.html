@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 1. Карта скиллов</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="top">Урок 1 · <a href="../reference/skill-map.html">Шпаргалка: ситуация → скилл</a></nav>
+
+<h1>Карта скиллов: какой когда</h1>
+<p class="lede">Цель урока: увидеть, что скиллы Покока делятся на три группы, и по ситуации называть нужный. Пять минут.</p>
+
+<h2>Зачем скиллы вообще</h2>
+<p>Автор строит их вокруг четырёх поломок работы с агентом (<a href="https://github.com/mattpocock/skills#why-these-skills-exist">README</a>):</p>
+<table>
+<tr><th>Поломка</th><th>Чем лечится</th></tr>
+<tr><td>Агент сделал не то</td><td><code>/grill-with-docs</code>: интервью до общего понимания</td></tr>
+<tr><td>Агент слишком многословен</td><td>общий язык в <code>GLOSSARY.md</code> (его ведёт тот же grill)</td></tr>
+<tr><td>Код не работает</td><td><code>/tdd</code>, <code>/diagnosing-bugs</code>: петля обратной связи</td></tr>
+<tr><td>Получился «ком грязи»</td><td><code>/to-spec</code>, <code>/improve-codebase-architecture</code>: забота о дизайне</td></tr>
+</table>
+<p class="sidenote">Идея автора: скилл нужен не как ритуал, а как лекарство от конкретной поломки. Если поломки нет, шаг можно пропустить.</p>
+
+<h2>Три группы</h2>
+<p>Роутер <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/ask-matt/SKILL.md"><code>ask-matt</code></a> раскладывает всё так:</p>
+
+<div class="card"><b>1. Основной флоу: идея → готово</b>
+<div class="flow"><span>/grill-with-docs</span><i>→</i><span>/to-spec</span><i>→</i><span>/to-tickets</span><i>→</i><span>/implement</span><i>→</i><span>/code-review</span></div>
+Для большинства работы. Внутри <code>/implement</code> сам вызывает <code>/tdd</code>. Если работа короткая и умещается в одну сессию, spec и tickets можно пропустить и идти сразу в <code>/implement</code>.</div>
+
+<div class="card"><b>2. On-ramps: откуда приходит работа</b>
+<code>/triage</code>: чужие, «сырые» issues. <code>/diagnosing-bugs</code>: упрямый баг. <code>/wayfinder</code>: огромная туманная работа больше одной сессии. Каждый заканчивается тем, что работа вливается в основной флоу.</div>
+
+<div class="card"><b>3. Standalone: вне флоу</b>
+<code>/prototype</code> (одноразовый код, чтобы ответить на вопрос дизайна), <code>/research</code> (фоновый агент читает источники), <code>/handoff</code>, <code>/wait-what</code>, <code>/retro</code>, <code>/wizard</code> и др.</div>
+
+<p>Ключевое отличие grill от wayfinder: grill шлифует идею, которую можно удержать в одной сессии; wayfinder нужен, когда путь к цели ещё не виден.</p>
+
+<h2>Проверка</h2>
+<p>Для каждой ситуации выбери скилл. Ответ сразу подсвечивается.</p>
+
+<div class="quiz" data-quiz='[
+{"q":"Есть идея новой фичи в репозитории, но что именно строить, ещё не ясно.","opts":["/to-spec","/wayfinder","/grill-with-docs","/implement"],"correct":2,"why":"/grill-with-docs — вход в основной флоу: интервью и заодно запись терминов в GLOSSARY.md. /to-spec только собирает уже обсуждённое, не опрашивает."},
+{"q":"Тест падает через раз, причину с ходу не видно.","opts":["/tdd","/diagnosing-bugs","/triage","/retro"],"correct":1,"why":"/diagnosing-bugs сначала строит команду, которая стабильно краснеет на этом баге, и только потом гипотезы. /tdd строит новое поведение."},
+{"q":"Новый проект: работы на много сессий, и даже путь к цели не очевиден.","opts":["/grill-with-docs","/to-spec","/prototype","/wayfinder"],"correct":3,"why":"/wayfinder чертит карту decision-тикетов и решает их по одному. Когда карта ясна, он передаёт работу в /to-spec."},
+{"q":"Spec готов. Нужно разрезать его на тонкие сквозные куски со связями «кто кого блокирует».","opts":["/to-tickets","/implement-spec","/handoff","/to-spec"],"correct":0,"why":"/to-tickets делает tracer-bullet тикеты с blocking edges. /implement-spec потом может исполнить их все разом."},
+{"q":"Агент выдал ответ сплошным жаргоном, ты ничего не понял.","opts":["/grill-me","/research","/wait-what","/retro"],"correct":2,"why":"/wait-what пересказывает сказанное простым языком, с контекстом, которого тебе не хватало. Работает посреди любого диалога."},
+{"q":"Словами не решить, как должно ощущаться состояние или экран. Надо увидеть.","opts":["/research","/prototype","/grill-with-docs","/tdd"],"correct":1,"why":"/prototype делает одноразовую программу под один вопрос дизайна. Ответ потом переносится в настоящий код."}
+]'></div>
+
+<h2>Что читать дальше</h2>
+<p><strong>Главный источник:</strong> <a href="file:///C:/Users/admin/.claude/plugins/cache/mattpocock/mattpocock-skills/1.3.1/skills/engineering/ask-matt/SKILL.md">ask-matt/SKILL.md</a>: весь роутер на одной странице. Для мотивации: <a href="https://github.com/mattpocock/skills">README</a>.</p>
+<p class="sidenote">Перед утверждением о том, что делает скилл, роутер сам советует читать его SKILL.md: сводки годятся только для ориентира.</p>
+
+<div class="card"><b>Спроси учителя</b>Что-то неясно (например, чем <code>/implement</code> отличается от <code>/implement-spec</code> или зачем <code>/handoff</code>)? Просто спроси меня в чате: я проверю по SKILL.md и отвечу.</div>
+
+<p class="sidenote">Следующий урок (предложение): «Зачем нужен grill и что он пишет в GLOSSARY.md». Это самый важный скилл флоу.</p>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
