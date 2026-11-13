@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 4. Разбор проекта rebalance</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<h1>Разбор реального проекта: Dockerfile и app.yml из rebalance</h1>
+<p class="sub">Урок 4 из курса «Docker: читать чужие проекты и CI». Около 20 минут. Предыдущий: <a href="0003-docker-compose.html">Docker Compose</a>.</p>
+
+<p><strong>Цель урока:</strong> прочитать два настоящих файла из вашего проекта и объяснить, что из них собирается, что запускается и в каком порядке. Новых понятий здесь четыре: многоэтапная сборка, healthcheck, условия в <code>depends_on</code> и <code>extends</code>.</p>
+
+<h2>Сначала: как эти два файла связаны</h2>
+<p>Прежде чем читать построчно, полезно понять, что перед вами. Комментарии в файлах говорят об этом прямо.</p>
+<ul>
+  <li><strong><code>Dockerfile</code></strong> — образ <em>фронтенда</em> (Angular, раздаётся через nginx). По комментарию в нём, он собирается сервисом <code>frontend</code> в Compose.</li>
+  <li><strong><code>app.yml</code></strong> — Compose-файл <em>бэкенда</em>: сервис <code>app</code> запускает образ <code>rebalance</code> (по комментарию в Dockerfile, он собирается инструментом jib, не Dockerfile), рядом поднимаются PostgreSQL и Elasticsearch.</li>
+</ul>
+<div class="note">
+  <strong>Наблюдение.</strong> В <code>app.yml</code> нет сервиса <code>frontend</code>, хотя Dockerfile ссылается на него. Значит, фронтенд описан в каком-то другом Compose-файле. Кроме того, <code>postgresql.yml</code> и <code>elasticsearch.yml</code>, на которые ссылается <code>app.yml</code>, в папке урока отсутствуют, поэтому их содержимое я не вижу. Это нормально: в чужих проектах картина почти всегда собирается из нескольких файлов.
+</div>
+
+<h2>Часть 1. Dockerfile</h2>
+<pre><code>FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginxinc/nginx-unprivileged:1.28-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
+EXPOSE 8080</code></pre>
+
+<h3>Новое понятие: многоэтапная сборка</h3>
+<p>В файле <strong>две</strong> инструкции <code>FROM</code>. Это многоэтапная сборка: в одном Dockerfile несколько этапов, у каждого своя база, и между этапами можно «выборочно копировать артефакты».<a class="cite" href="https://docs.docker.com/build/building/multi-stage/">[1]</a> Этап можно назвать: <code>AS build</code> даёт первому этапу имя.<a class="cite" href="https://docs.docker.com/build/building/multi-stage/">[1]</a> Смысл в том, что инструменты сборки остаются в ранних этапах, а в итоговый образ попадает только нужное.<a class="cite" href="https://docs.docker.com/build/building/multi-stage/">[1]</a></p>
+
+<h3>Этап 1: build (Node)</h3>
+<table>
+  <tr><th>Строка</th><th>Что делает</th></tr>
+  <tr><td><code>FROM node:24-alpine AS build</code></td><td>Базовый образ с Node, этап называется <code>build</code></td></tr>
+  <tr><td><code>WORKDIR /app</code></td><td>Дальше работаем в <code>/app</code></td></tr>
+  <tr><td><code>COPY package.json package-lock.json ./</code></td><td>Копирует только описание зависимостей</td></tr>
+  <tr><td><code>RUN npm ci</code></td><td>Ставит зависимости строго по lock-файлу</td></tr>
+  <tr><td><code>COPY . .</code></td><td>Копирует весь остальной код</td></tr>
+  <tr><td><code>RUN npm run build</code></td><td>Собирает Angular-бандл</td></tr>
+</table>
+<p>Про <code>npm ci</code>: это «чистая установка» для автоматизированных окружений, включая CI. Ей нужен существующий <code>package-lock.json</code>; если lock не совпадает с <code>package.json</code>, команда падает с ошибкой, а <code>node_modules</code> перед установкой удаляется.<a class="cite" href="https://docs.npmjs.com/cli/v11/commands/npm-ci">[2]</a></p>
+<p><strong>Это урок 2 в действии.</strong> Сначала копируются только <code>package*.json</code> и ставятся зависимости, и лишь потом копируется весь код. Если изменить файл исходников, слои до <code>COPY . .</code>, включая <code>npm ci</code>, не пересобираются, потому что пересобираются изменённый слой и все после него.<a class="cite" href="https://docs.docker.com/build/cache/">[3]</a> Первое <code>.</code> в <code>COPY . .</code> — корень контекста сборки, второе — папка назначения внутри этапа.<a class="cite" href="https://docs.docker.com/reference/dockerfile/">[4]</a></p>
+
+<h3>Этап 2: итоговый образ (nginx)</h3>
+<table>
+  <tr><th>Строка</th><th>Что делает</th></tr>
+  <tr><td><code>FROM nginxinc/nginx-unprivileged:1.28-alpine</code></td><td>Новая база: nginx; Node здесь уже нет</td></tr>
+  <tr><td><code>COPY nginx.conf /etc/nginx/conf.d/default.conf</code></td><td>Кладёт ваш конфиг nginx из контекста сборки</td></tr>
+  <tr><td><code>COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html</code></td><td>Забирает готовый бандл из этапа <code>build</code></td></tr>
+  <tr><td><code>EXPOSE 8080</code></td><td>Документирует порт 8080</td></tr>
+</table>
+<p><code>COPY --from</code> копирует из образа, этапа или именованного контекста вместо контекста сборки, а путь-источник считается от корня указанного этапа.<a class="cite" href="https://docs.docker.com/reference/dockerfile/">[4]</a> Здесь <code>/app/dist/frontend/browser</code> — папка, созданная <code>npm run build</code> на первом этапе. В финальный образ попадает только она, без Node и без <code>node_modules</code>.</p>
+<p>Про <code>EXPOSE</code>: инструкция <strong>не публикует</strong> порт, она лишь документирует, какие порты слушает контейнер; публикуют их при запуске флагом <code>-p</code>.<a class="cite" href="https://docs.docker.com/reference/dockerfile/">[4]</a> Это тот же <code>ports</code> из Compose.</p>
+
+<h3>Три вопроса к этому Dockerfile</h3>
+<ol>
+  <li><strong>Где <code>CMD</code>?</strong> В файле его нет. Документация говорит, что Dockerfile должен задавать <code>CMD</code> или <code>ENTRYPOINT</code>,<a class="cite" href="https://docs.docker.com/reference/dockerfile/">[4]</a> но прямо не пишет, что <code>CMD</code> наследуется от базового образа. Скорее всего, команду запуска nginx приносит базовый образ, но это моё предположение. Проверить можно командой из практики ниже.</li>
+  <li><strong>Почему порт 8080?</strong> Имя образа «unprivileged» намекает на запуск без прав root, но страница на Docker Hub не называет ни пользователя, ни порт.<a class="cite" href="https://hub.docker.com/r/nginxinc/nginx-unprivileged">[5]</a> Что слушает nginx на самом деле, задаёт ваш <code>nginx.conf</code> и базовый образ: сверьте.</li>
+  <li><strong>Актуальна ли база?</strong> На странице <code>nginxinc/nginx-unprivileged</code> написано, что репозиторий больше не поддерживается и нужно использовать <code>nginx/nginx-unprivileged</code>.<a class="cite" href="https://hub.docker.com/r/nginxinc/nginx-unprivileged">[5]</a> Это не ошибка сборки, но повод сказать команде проекта.</li>
+</ol>
+
+<h2>Часть 2. app.yml</h2>
+<h3>Верхний уровень</h3>
+<ul>
+  <li><code>name: rebalance</code> — имя Compose-проекта. Проект группирует ресурсы и изолирует их от других развёртываний.<a class="cite" href="https://docs.docker.com/compose/intro/compose-application-model/">[6]</a> Из него получатся имена вроде <code>rebalance-app-1</code>.</li>
+  <li>Комментарий вверху: конфигурация для разработки, за усиление для продакшена отвечаете вы. Читайте такое буквально.</li>
+  <li>Три сервиса: <code>app</code>, <code>postgresql</code>, <code>elasticsearch</code>.</li>
+</ul>
+
+<h3>Сервис app</h3>
+<table>
+  <tr><th>Ключ</th><th>Значение</th><th>Как читать</th></tr>
+  <tr><td><code>image</code></td><td><code>rebalance</code></td><td>Готовый образ, <code>build</code> нет. Образ должен быть собран заранее (по комментарию в Dockerfile, jib), иначе Compose попытается его скачать.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a></td></tr>
+  <tr><td><code>environment</code></td><td>список <code>ИМЯ=значение</code></td><td>Переменные окружения в контейнере. Список — одна из двух форм записи.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a></td></tr>
+  <tr><td><code>ports</code></td><td><code>127.0.0.1:8080:8080</code></td><td>Порт 8080 хоста привязан к адресу 127.0.0.1</td></tr>
+  <tr><td><code>healthcheck</code></td><td>длинная команда</td><td>Как узнать, что приложение здорово</td></tr>
+  <tr><td><code>depends_on</code></td><td>два сервиса с условием</td><td>Ждать здоровых <code>postgresql</code> и <code>elasticsearch</code></td></tr>
+</table>
+
+<h4>environment: что внутри</h4>
+<p>Переменные вида <code>SPRING_DATASOURCE_URL</code> — это настройки Spring Boot, а не Docker: Docker лишь передаёт их в контейнер. Обратите внимание на адреса <code>jdbc:postgresql://postgresql:5432/rebalance</code> и <code>http://elasticsearch:9200</code>. Хосты <code>postgresql</code> и <code>elasticsearch</code> совпадают с именами сервисов ниже в файле. Сервисы общаются через сеть Compose,<a class="cite" href="https://docs.docker.com/compose/intro/compose-application-model/">[6]</a> и это совпадение имён не случайно. Как именно имя сервиса работает как адрес, я в документации пока не разбирал (см. пробелы в <code>RESOURCES.md</code>).</p>
+<p><code>SPRING_DATASOURCE_PASSWORD=</code> оставлен пустым. Для образа PostgreSQL переменная <code>POSTGRES_PASSWORD</code> обязательна и не может быть пустой.<a class="cite" href="https://hub.docker.com/_/postgres">[8]</a> Что делает именно ваш <code>postgresql.yml</code>, я не вижу, поэтому вопрос открытый: где задаётся пароль базы и совпадает ли он с пустым паролем приложения.</p>
+
+<h4>ports: зачем 127.0.0.1</h4>
+<p>Формат — <code>[HOST:]CONTAINER</code>. Если IP не указан, Docker привязывает порт ко всем интерфейсам (<code>0.0.0.0</code>) и обходит правила файрвола хоста; указав <code>127.0.0.1</code>, вы открываете порт только для самой машины.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a> Здесь так и сделано: API бэкенда виден только локально.</p>
+
+<h4>healthcheck</h4>
+<p><code>healthcheck</code> объявляет проверку, по которой определяется, «здоров» ли контейнер сервиса.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a> <code>test</code> — команда проверки; <code>CMD-SHELL</code> запускает строку в оболочке контейнера по умолчанию.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a></p>
+<pre><code>test:
+  - CMD-SHELL
+  - "bash -c 'exec 3&lt;&gt;/dev/tcp/127.0.0.1/8080; printf \"GET
+    /management/health HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&amp;3;
+    grep -q \"\\\"status\\\":\\\"UP\\\"\" &lt;&amp;3'"
+interval: 5s
+timeout: 5s
+retries: 40</code></pre>
+<p>Прочитать это можно так (это моя расшифровка команды, не цитата из документации): <code>bash</code> открывает TCP-соединение на <code>127.0.0.1:8080</code> прямо из контейнера, отправляет HTTP-запрос на <code>/management/health</code> и ищет в ответе <code>"status":"UP"</code>. Нашёл — контейнер здоров. Так сделано, чтобы не требовать в образе ни <code>curl</code>, ни <code>wget</code>. Проверка идёт каждые 5 секунд, с таймаутом 5 секунд и до 40 попыток: приложению даётся порядка трёх с лишним минут на запуск.</p>
+
+<h4>depends_on с условием</h4>
+<p>В уроке 3 был короткий <code>depends_on: - db</code> (только порядок запуска). Здесь длинная форма, которая позволяет задать дополнительные поля.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a> Условие <code>service_healthy</code> означает, что зависимость должна быть «здоровой» (по её <code>healthcheck</code>) <em>до</em> запуска зависимого сервиса.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a> То есть <code>app</code> стартует, только когда PostgreSQL и Elasticsearch прошли свои проверки. Это не то же самое, что «контейнер просто запущен» (<code>service_started</code>).</p>
+
+<h3>Сервисы postgresql и elasticsearch: extends</h3>
+<pre><code>postgresql:
+  extends:
+    file: ./postgresql.yml
+    service: postgresql</code></pre>
+<p><code>extends</code> позволяет делить общие настройки между файлами и даже проектами; <code>file</code> — путь к Compose-файлу, <code>service</code> — имя сервиса, который берётся за основу.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[7]</a> Сервис наследует все свойства из указанного, и их можно локально дополнять или менять.<a class="cite" href="https://docs.docker.com/compose/how-tos/multiple-compose-files/extends/">[9]</a> Поэтому настоящие образы и тома баз данных нужно искать не в <code>app.yml</code>, а в <code>postgresql.yml</code> и <code>elasticsearch.yml</code>.</p>
+
+<h2>Карта целиком</h2>
+<table>
+  <tr><th>Вопрос чужого проекта</th><th>Ответ из этих файлов</th></tr>
+  <tr><td>Что собирается из Dockerfile?</td><td>Фронтенд: Node собирает Angular, nginx раздаёт готовые файлы</td></tr>
+  <tr><td>Что запускает app.yml?</td><td>Бэкенд-образ <code>rebalance</code> + PostgreSQL + Elasticsearch</td></tr>
+  <tr><td>В каком порядке?</td><td>PostgreSQL и Elasticsearch → пройдена проверка здоровья → app</td></tr>
+  <tr><td>Что видно снаружи?</td><td>Только <code>127.0.0.1:8080</code> (бэкенд)</td></tr>
+  <tr><td>Где живут данные?</td><td>Не видно: ищите тома в <code>postgresql.yml</code> и <code>elasticsearch.yml</code></td></tr>
+</table>
+
+<h2>Попробуйте в терминале</h2>
+<p>Я не запускал эти команды: на момент подготовки урока демон Docker не работал. Запустите Docker Desktop и выполните их из корня вашего проекта (там, где лежат <code>app.yml</code>, <code>postgresql.yml</code> и <code>elasticsearch.yml</code>).</p>
+<pre><code>docker compose -f app.yml config        # итог слияния: что дал extends
+docker image history nginxinc/nginx-unprivileged:1.28-alpine
+docker image inspect nginxinc/nginx-unprivileged:1.28-alpine</code></pre>
+<p>Первая команда показывает итоговую конфигурацию с учётом <code>extends</code>; проверять результат этой командой рекомендует и документация.<a class="cite" href="https://docs.docker.com/compose/how-tos/multiple-compose-files/extends/">[9]</a> В выводе <code>inspect</code> поищите поля <code>Cmd</code>, <code>User</code> и <code>ExposedPorts</code>: так вы ответите на первый и второй вопросы к Dockerfile из этого урока. Ответы мне не известны. Если принесёте вывод, разберём его вместе.</p>
+
+<h2>Проверьте себя</h2>
+<div class="quiz">
+  <div class="q" data-correct="2">
+    <p>1. Зачем в Dockerfile две инструкции <code>FROM</code>?</p>
+    <button class="opt">Первый образ запускается, второй собирается заново</button>
+    <button class="opt">Оба образа смешиваются в один слой</button>
+    <button class="opt">Инструменты сборки остаются в первом этапе</button>
+    <div class="why">Это многоэтапная сборка: ранние этапы нужны для сборки, и их инструменты не попадают в итоговый образ. Копируются только нужные артефакты.</div>
+  </div>
+  <div class="q" data-correct="1">
+    <p>2. Что делает <code>COPY --from=build</code>?</p>
+    <button class="opt">Копирует файлы с хоста в образ</button>
+    <button class="opt">Копирует файлы из этапа build</button>
+    <button class="opt">Копирует файлы из реестра образов</button>
+    <div class="why"><code>--from</code> меняет источник: вместо контекста сборки берутся файлы из указанного этапа, образа или именованного контекста.</div>
+  </div>
+  <div class="q" data-correct="0">
+    <p>3. Что означает <code>127.0.0.1:8080:8080</code> в <code>ports</code>?</p>
+    <button class="opt">Порт доступен только с самого хоста</button>
+    <button class="opt">Порт открыт на всех интерфейсах хоста</button>
+    <button class="opt">Порт виден из локальной сети тоже</button>
+    <div class="why">С указанным IP 127.0.0.1 порт привязан только к локальной машине. Без IP Docker привязывает порт ко всем интерфейсам.</div>
+  </div>
+  <div class="q" data-correct="1">
+    <p>4. Что задаёт <code>condition: service_healthy</code> для <code>postgresql</code>?</p>
+    <button class="opt">Приложение стартует без ожидания базы данных</button>
+    <button class="opt">Приложение стартует после успешной проверки healthcheck</button>
+    <button class="opt">Приложение стартует после удаления старых томов</button>
+    <div class="why">Зависимость должна стать «здоровой» по своему <code>healthcheck</code> до запуска зависимого сервиса. Это строже, чем <code>service_started</code>.</div>
+  </div>
+  <div class="score"></div>
+</div>
+
+<h2>Читать дальше</h2>
+<p><strong>Основной источник:</strong> <a href="https://docs.docker.com/build/building/multi-stage/">Docker Docs: Multi-stage builds</a>. Затем <a href="https://docs.docker.com/reference/compose-file/services/">справочник по сервисам Compose</a> (разделы <code>healthcheck</code>, <code>depends_on</code>, <code>extends</code>). Термины — в <a href="../reference/glossary.html">глоссарии</a>.</p>
+
+<footer>
+  Что-то непонятно? Спросите меня, я ваш учитель. Лучший следующий шаг: принесите <code>postgresql.yml</code>, <code>elasticsearch.yml</code>, <code>nginx.conf</code> и вывод команд из практики, и мы закроем открытые вопросы урока.
+  <br>Источники: [1] <a href="https://docs.docker.com/build/building/multi-stage/">Multi-stage builds</a>, [2] <a href="https://docs.npmjs.com/cli/v11/commands/npm-ci">npm ci</a>, [3] <a href="https://docs.docker.com/build/cache/">Build cache</a>, [4] <a href="https://docs.docker.com/reference/dockerfile/">Dockerfile reference</a>, [5] <a href="https://hub.docker.com/r/nginxinc/nginx-unprivileged">Docker Hub: nginxinc/nginx-unprivileged</a>, [6] <a href="https://docs.docker.com/compose/intro/compose-application-model/">Compose application model</a>, [7] <a href="https://docs.docker.com/reference/compose-file/services/">Compose file: services</a>, [8] <a href="https://hub.docker.com/_/postgres">Docker Hub: postgres</a>, [9] <a href="https://docs.docker.com/compose/how-tos/multiple-compose-files/extends/">Extend your Compose configuration</a>
+</footer>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 1. Образ и контейнер</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<h1>Образ и контейнер</h1>
+<p class="sub">Урок 1 из курса «Docker: читать чужие проекты и CI». Около 10 минут.</p>
+
+<p><strong>Цель урока:</strong> после него вы отличаете образ от контейнера и можете выбрать команду для каждого. Это основа для чтения любого Dockerfile, docker-compose и шага CI.</p>
+
+<h2>Что такое Docker</h2>
+<p>Docker — открытая платформа для разработки, доставки и запуска приложений.<a class="cite" href="https://docs.docker.com/get-started/docker-overview/">[1]</a> Приложение упаковывается вместе с зависимостями, поэтому ведёт себя одинаково на разных машинах.</p>
+<p>Устроен Docker по схеме клиент–сервер.<a class="cite" href="https://docs.docker.com/get-started/docker-overview/">[1]</a></p>
+<ul>
+  <li><strong>Клиент</strong> (<code>docker</code>) — то, что вы запускаете в терминале. Он отправляет команды демону.</li>
+  <li><strong>Демон</strong> (<code>dockerd</code>) — фоновая служба, которая реально управляет образами и контейнерами.</li>
+  <li><strong>Реестр</strong> — хранилище образов. Публичный реестр по умолчанию — Docker Hub.</li>
+</ul>
+<p>Docker Desktop, который у вас установлен, запускает демон за вас.</p>
+
+<h2>Две главные сущности</h2>
+<div class="pair">
+  <div>
+    <h3>Образ (image)</h3>
+    <p>Стандартизованный пакет: всё, что нужно для запуска (рантайм, код, зависимости). Неизменяемый: можно только создать новый образ или добавить слой поверх.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">[2]</a></p>
+  </div>
+  <div>
+    <h3>Контейнер (container)</h3>
+    <p>Запускаемый экземпляр образа.<a class="cite" href="https://docs.docker.com/get-started/docker-overview/">[1]</a> По сути — изолированный процесс со всеми файлами, нужными ему для работы.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">[3]</a></p>
+  </div>
+</div>
+
+<p>Образ описывает, <em>что</em> запускать. Контейнер — это <em>запущенное</em> (или остановленное) воплощение этого описания. Образ лежит на диске и сам ничего не делает.</p>
+
+<div class="note">
+  <strong>Аналогия для Java-разработчика.</strong> Образ похож на класс, контейнер — на объект: из одного класса можно создать много объектов. Аналогия неполная: образ состоит из слоёв (каждый слой — набор изменений файловой системы<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">[2]</a>), а контейнер — это целый изолированный процесс, а не просто область памяти.
+</div>
+
+<h2>Чем контейнер отличается от виртуальной машины</h2>
+<p>VM запускает полноценную ОС со своим ядром. Контейнеры используют общее ядро, поэтому на той же инфраструктуре помещается больше приложений.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">[3]</a></p>
+
+<h2>Сводка</h2>
+<table>
+  <tr><th></th><th>Образ</th><th>Контейнер</th></tr>
+  <tr><td>Что это</td><td>Шаблон, пакет</td><td>Запущенный экземпляр</td></tr>
+  <tr><td>Изменяется?</td><td>Нет, неизменяем</td><td>Живёт и работает; данные без постоянного хранилища теряются при удалении<a class="cite" href="https://docs.docker.com/get-started/docker-overview/">[1]</a></td></tr>
+  <tr><td>Сколько?</td><td>Один</td><td>Много из одного образа</td></tr>
+  <tr><td>Посмотреть</td><td><code>docker images</code></td><td><code>docker ps</code></td></tr>
+</table>
+
+<h2>Попробуйте в терминале</h2>
+<p>Команды из официальной практики.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">[3]</a> Выполняйте по порядку и смотрите на вывод.</p>
+<pre><code>docker images                                   # образов пока может не быть
+docker run -d -p 8080:80 docker/welcome-to-docker
+docker images                                   # появился образ (скачан из Docker Hub)
+docker ps                                       # и работающий контейнер
+</code></pre>
+<p>Откройте <a href="http://localhost:8080">http://localhost:8080</a>. Теперь запустите второй контейнер из <em>того же</em> образа на другом порту:</p>
+<pre><code>docker run -d -p 8081:80 docker/welcome-to-docker
+docker ps                                       # два контейнера
+docker images                                   # образ всё ещё один
+</code></pre>
+<p>Это и есть разница: один образ, два контейнера. Уберите за собой:</p>
+<pre><code>docker stop &lt;ID или имя из docker ps&gt;            # для каждого контейнера
+</code></pre>
+<p>Флаги: <code>-d</code> запускает в фоне, <code>-p 8080:80</code> связывает порт 8080 хоста с портом 80 контейнера.</p>
+
+<h2>Проверьте себя</h2>
+<div class="quiz">
+  <div class="q" data-correct="1">
+    <p>1. Что такое образ (image)?</p>
+    <button class="opt">Работающий процесс внутри изоляции хоста</button>
+    <button class="opt">Неизменяемый шаблон для создания контейнеров</button>
+    <button class="opt">Фоновая служба, управляющая всеми объектами</button>
+    <div class="why">Образ — неизменяемый пакет. Работающий изолированный процесс — это контейнер, а фоновая служба — демон dockerd.</div>
+  </div>
+  <div class="q" data-correct="2">
+    <p>2. Вы дважды выполнили <code>docker run</code> с одним и тем же образом. Что получилось?</p>
+    <button class="opt">Два образа, два контейнера</button>
+    <button class="opt">Два образа, один контейнер</button>
+    <button class="opt">Один образ, два контейнера</button>
+    <div class="why">Образ один и не меняется, а каждый запуск создаёт отдельный контейнер.</div>
+  </div>
+  <div class="q" data-correct="0">
+    <p>3. Что будет с данными внутри контейнера после его удаления?</p>
+    <button class="opt">Они пропадут, если не сохранены</button>
+    <button class="opt">Они переедут обратно в образ</button>
+    <button class="opt">Они останутся в реестре навсегда</button>
+    <div class="why">Данные, не сохранённые в постоянное хранилище, теряются при удалении контейнера. Образ при этом не меняется, он неизменяем.</div>
+  </div>
+  <div class="q" data-correct="1">
+    <p>4. Какая команда покажет скачанные образы, а не контейнеры?</p>
+    <button class="opt"><code>docker ps</code></button>
+    <button class="opt"><code>docker images</code></button>
+    <button class="opt"><code>docker stop</code></button>
+    <div class="why"><code>docker images</code> перечисляет образы. <code>docker ps</code> показывает контейнеры, а <code>docker stop</code> останавливает контейнер.</div>
+  </div>
+  <div class="score"></div>
+</div>
+
+<h2>Читать дальше</h2>
+<p><strong>Основной источник:</strong> <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">Docker Docs: What is a container?</a> и следующая страница <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">What is an image?</a>. Короткие, официальные, с той же практикой.</p>
+<p>Термины урока собраны в <a href="../reference/glossary.html">глоссарии</a>.</p>
+
+<footer>
+  Что-то непонятно? Спросите меня, я ваш учитель: можно задавать любые уточняющие вопросы по этому уроку, в том числе «а почему так?».
+  <br>Источники: [1] <a href="https://docs.docker.com/get-started/docker-overview/">Docker overview</a>, [2] <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">What is an image?</a>, [3] <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">What is a container?</a>
+</footer>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глоссарий Docker</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<h1>Глоссарий Docker</h1>
+<p class="sub">Справочник. Дополняется с каждым уроком.</p>
+
+<table>
+  <tr><th>Термин</th><th>Значение</th><th>Урок</th></tr>
+  <tr><td>Docker</td><td>Открытая платформа для разработки, доставки и запуска приложений.</td><td><a href="../lessons/0001-image-vs-container.html">1</a></td></tr>
+  <tr><td>Образ (image)</td><td>Неизменяемый стандартизованный пакет со всем, что нужно для запуска: рантайм, код, зависимости. Состоит из слоёв.</td><td><a href="../lessons/0001-image-vs-container.html">1</a></td></tr>
+  <tr><td>Контейнер (container)</td><td>Запускаемый экземпляр образа; изолированный процесс со всеми нужными ему файлами.</td><td><a href="../lessons/0001-image-vs-container.html">1</a></td></tr>
+  <tr><td>Слой (layer)</td><td>Набор изменений файловой системы: добавление, удаление или изменение файлов.</td><td><a href="../lessons/0001-image-vs-container.html">1</a></td></tr>
+  <tr><td>Демон (dockerd)</td><td>Фоновая служба, управляющая образами, контейнерами, сетями и томами.</td><td><a href="../lessons/0001-image-vs-container.html">1</a></td></tr>
+  <tr><td>Клиент (docker)</td><td>Команда в терминале; отправляет запросы демону.</td><td><a href="../lessons/0001-image-vs-container.html">1</a></td></tr>
+  <tr><td>Реестр (registry)</td><td>Хранилище образов. Docker Hub — публичный реестр по умолчанию.</td><td><a href="../lessons/0001-image-vs-container.html">1</a></td></tr>
+  <tr><td>Dockerfile</td><td>Текстовый документ с инструкциями для сборки образа.</td><td><a href="../lessons/0002-reading-a-dockerfile.html">2</a></td></tr>
+  <tr><td>Базовый образ</td><td>Образ, который расширяет сборка; задаётся инструкцией FROM.</td><td><a href="../lessons/0002-reading-a-dockerfile.html">2</a></td></tr>
+  <tr><td>Контекст сборки</td><td>Путь (обычно точка в конце docker build), где сборщик ищет Dockerfile и нужные файлы.</td><td><a href="../lessons/0002-reading-a-dockerfile.html">2</a></td></tr>
+  <tr><td>Тег (tag)</td><td>Читаемый идентификатор версии образа; по умолчанию latest. Полное имя: [HOST[:PORT]/]PATH[:TAG].</td><td><a href="../lessons/0002-reading-a-dockerfile.html">2</a></td></tr>
+  <tr><td>Кэш сборки</td><td>Каждая инструкция Dockerfile даёт слой; изменённый слой и все после него пересобираются.</td><td><a href="../lessons/0002-reading-a-dockerfile.html">2</a></td></tr>
+  <tr><td>Docker Compose</td><td>Инструмент для описания и запуска многоконтейнерных приложений одним YAML-файлом.</td><td><a href="../lessons/0003-docker-compose.html">3</a></td></tr>
+  <tr><td>Сервис (Compose)</td><td>Компонент приложения; запускается из одного образа с одной конфигурацией, один или несколько раз.</td><td><a href="../lessons/0003-docker-compose.html">3</a></td></tr>
+  <tr><td>Том (volume)</td><td>Хранилище, сохраняющее данные после удаления контейнера; имеет свой жизненный цикл.</td><td><a href="../lessons/0003-docker-compose.html">3</a></td></tr>
+  <tr><td>Проект (Compose)</td><td>Одно развёртывание приложения; группирует и изолирует ресурсы.</td><td><a href="../lessons/0003-docker-compose.html">3</a></td></tr>
+  <tr><td>Многоэтапная сборка</td><td>Несколько FROM в одном Dockerfile; артефакты выборочно копируются между этапами, инструменты сборки не попадают в итоговый образ.</td><td><a href="../lessons/0004-real-project-rebalance.html">4</a></td></tr>
+  <tr><td>Healthcheck</td><td>Проверка, по которой определяется, «здоров» ли контейнер сервиса.</td><td><a href="../lessons/0004-real-project-rebalance.html">4</a></td></tr>
+  <tr><td>extends</td><td>Ключ Compose: берёт сервис из другого файла как основу и позволяет дополнять или менять его настройки.</td><td><a href="../lessons/0004-real-project-rebalance.html">4</a></td></tr>
+</table>
+
+<h2>Ключи compose.yaml</h2>
+<table>
+  <tr><th>Ключ</th><th>Что делает</th></tr>
+  <tr><td><code>image</code></td><td>Готовый образ для сервиса</td></tr>
+  <tr><td><code>build</code></td><td>Собрать образ из исходников</td></tr>
+  <tr><td><code>ports</code></td><td>Порты хост:контейнер</td></tr>
+  <tr><td><code>environment</code></td><td>Переменные окружения в контейнере</td></tr>
+  <tr><td><code>depends_on</code></td><td>Порядок запуска и остановки сервисов</td></tr>
+  <tr><td><code>volumes</code></td><td>Монтирование тома: ТОМ:ПУТЬ_В_КОНТЕЙНЕРЕ</td></tr>
+  <tr><td><code>healthcheck</code></td><td>Команда проверки здоровья (test, interval, timeout, retries)</td></tr>
+  <tr><td><code>depends_on</code> + <code>condition</code></td><td>service_started, service_healthy, service_completed_successfully</td></tr>
+  <tr><td><code>extends</code></td><td>Взять сервис из другого файла (file, service)</td></tr>
+  <tr><td><code>ports: 127.0.0.1:8080:8080</code></td><td>Порт доступен только с самого хоста; без IP открывается на всех интерфейсах</td></tr>
+</table>
+
+<h2>Инструкции Dockerfile</h2>
+<table>
+  <tr><th>Инструкция</th><th>Что делает</th></tr>
+  <tr><td><code>FROM</code></td><td>Базовый образ</td></tr>
+  <tr><td><code>WORKDIR</code></td><td>Рабочая директория в образе</td></tr>
+  <tr><td><code>COPY</code></td><td>Копирует файлы с хоста в образ</td></tr>
+  <tr><td><code>RUN</code></td><td>Команда во время сборки (результат остаётся в образе)</td></tr>
+  <tr><td><code>ENV</code></td><td>Переменная окружения для контейнера</td></tr>
+  <tr><td><code>EXPOSE</code></td><td>Порт, который образ хочет открыть</td></tr>
+  <tr><td><code>USER</code></td><td>Пользователь по умолчанию для последующих инструкций</td></tr>
+  <tr><td><code>CMD</code></td><td>Команда по умолчанию при запуске контейнера</td></tr>
+  <tr><td><code>FROM ... AS name</code></td><td>Именованный этап сборки</td></tr>
+  <tr><td><code>COPY --from=name</code></td><td>Копировать файлы из этапа, образа или именованного контекста, а не из контекста сборки</td></tr>
+</table>
+
+<h2>Команды</h2>
+<table>
+  <tr><th>Команда</th><th>Что делает</th></tr>
+  <tr><td><code>docker images</code></td><td>Список образов</td></tr>
+  <tr><td><code>docker ps</code></td><td>Список работающих контейнеров</td></tr>
+  <tr><td><code>docker run -d -p 8080:80 &lt;образ&gt;</code></td><td>Создать и запустить контейнер в фоне, порт 8080 хоста → порт 80 контейнера</td></tr>
+  <tr><td><code>docker stop &lt;ID|имя&gt;</code></td><td>Остановить контейнер</td></tr>
+  <tr><td><code>docker build -t &lt;имя&gt; .</code></td><td>Собрать образ из Dockerfile в текущей папке и дать ему имя</td></tr>
+  <tr><td><code>docker image ls</code></td><td>Список образов (то же, что docker images)</td></tr>
+  <tr><td><code>docker ps -a</code></td><td>Все контейнеры, включая остановленные</td></tr>
+  <tr><td><code>docker compose up -d --build</code></td><td>Собрать при необходимости и запустить все сервисы в фоне</td></tr>
+  <tr><td><code>docker compose down</code></td><td>Удалить контейнеры и сеть проекта, тома сохраняются</td></tr>
+  <tr><td><code>docker compose down --volumes</code></td><td>То же и удалить тома</td></tr>
+  <tr><td><code>docker compose ps</code></td><td>Контейнеры проекта</td></tr>
+  <tr><td><code>docker volume ls</code></td><td>Список томов</td></tr>
+  <tr><td><code>docker compose -f app.yml config</code></td><td>Показать итоговую конфигурацию (с учётом extends) для указанного файла</td></tr>
+</table>
+
+<footer>Источник: <a href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">Writing a Dockerfile</a>, <a href="https://docs.docker.com/build/cache/">Build cache</a>, <a href="https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/">Build, tag, and publish</a>, <a href="https://docs.docker.com/get-started/docker-overview/">Docker overview</a>,<a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">What is an image?</a>, <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">What is a container?</a></footer>
+</body>
+</html>

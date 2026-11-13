@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 3. Docker Compose</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<h1>Docker Compose: несколько контейнеров одним файлом</h1>
+<p class="sub">Урок 3 из курса «Docker: читать чужие проекты и CI». Около 15 минут. Предыдущий: <a href="0002-reading-a-dockerfile.html">читаем Dockerfile</a>.</p>
+
+<p><strong>Цель урока:</strong> открыть чужой <code>compose.yaml</code> и сказать, какие сервисы поднимутся, что с чем соединено и где хранятся данные.</p>
+
+<h2>Зачем это нужно</h2>
+<p>Реальное приложение — это обычно несколько контейнеров: само приложение, база данных, что-то ещё. Запускать каждый вручную через <code>docker run</code>, следить за сетью и уборкой неудобно. Compose позволяет описать все контейнеры и их настройки в одном YAML-файле.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">[1]</a></p>
+<p>Связь с прошлым уроком: <strong>Dockerfile содержит инструкции для сборки образа, а Compose-файл описывает ваши запускаемые контейнеры</strong>.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">[1]</a></p>
+
+<h2>Из чего состоит модель Compose</h2>
+<table>
+  <tr><th>Понятие</th><th>Что это</th></tr>
+  <tr><td>Сервис (service)</td><td>Вычислительный компонент приложения; запускается из одного образа с одной конфигурацией, один или несколько раз<a class="cite" href="https://docs.docker.com/compose/intro/compose-application-model/">[2]</a></td></tr>
+  <tr><td>Сеть (network)</td><td>Через неё сервисы общаются друг с другом<a class="cite" href="https://docs.docker.com/compose/intro/compose-application-model/">[2]</a></td></tr>
+  <tr><td>Том (volume)</td><td>Хранилище постоянных данных сервисов<a class="cite" href="https://docs.docker.com/compose/intro/compose-application-model/">[2]</a></td></tr>
+  <tr><td>Проект (project)</td><td>Одно развёртывание приложения; группирует ресурсы и изолирует их от других развёртываний<a class="cite" href="https://docs.docker.com/compose/intro/compose-application-model/">[2]</a></td></tr>
+</table>
+<p>Каждый сервис указывает свой образ, порты, тома, сети и другие настройки.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">[1]</a> Это те же понятия, что в <code>docker run</code>, только записанные в файл.</p>
+
+<h2>Читаем compose.yaml</h2>
+<div class="note">Пример ниже я составил сам из фрагментов документации, чтобы показать типичную форму. Это не копия одной страницы, и имя переменной <code>DB_HOST</code> здесь условное.</div>
+<pre><code>services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+volumes:
+  postgres_data:</code></pre>
+<p>Читайте по ключам:</p>
+<ul>
+  <li><code>services</code> — два сервиса: <code>app</code> и <code>db</code>.</li>
+  <li><code>build: .</code> — образ сервиса <code>app</code> собирается из исходников (из Dockerfile в этой папке), а не скачивается.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[3]</a></li>
+  <li><code>image: postgres:18</code> — образ <code>db</code> берётся готовый.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[3]</a></li>
+  <li><code>ports</code> — соответствие портов хоста и контейнера, как <code>-p</code> в <code>docker run</code>.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[3]</a></li>
+  <li><code>environment</code> — переменные окружения в контейнере. Образу PostgreSQL обязательно нужен <code>POSTGRES_PASSWORD</code>, он не может быть пустым.<a class="cite" href="https://hub.docker.com/_/postgres">[4]</a></li>
+  <li><code>depends_on</code> — порядок запуска и остановки сервисов.<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[3]</a></li>
+  <li><code>volumes</code> у <code>db</code> — монтирует том <code>postgres_data</code> по пути <code>/var/lib/postgresql</code> (формат <code>ТОМ:ПУТЬ_В_КОНТЕЙНЕРЕ</code>).<a class="cite" href="https://docs.docker.com/reference/compose-file/services/">[3]</a> Верхнеуровневый <code>volumes:</code> объявляет сам том.</li>
+</ul>
+
+<h2>Зачем том для базы</h2>
+<p>Изменения файлов в контейнере живут только пока жив контейнер: при его удалении они удаляются тоже, и база могла бы стартовать пустой.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/">[5]</a> Том хранит данные независимо от контейнера, у него свой жизненный цикл.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/">[5]</a> Поэтому в Compose-файлах с базами почти всегда есть <code>volumes</code>. Это отвечает на вопрос из начала: «где живут данные».</p>
+
+<h2>Команды</h2>
+<table>
+  <tr><th>Команда</th><th>Что делает</th></tr>
+  <tr><td><code>docker compose up -d --build</code></td><td>Собирает, если нужно, и запускает все сервисы в фоне; создаёт сеть, том и контейнеры<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">[1]</a></td></tr>
+  <tr><td><code>docker compose down</code></td><td>Останавливает и удаляет контейнеры и сеть; тома по умолчанию сохраняются<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">[1]</a></td></tr>
+  <tr><td><code>docker compose down --volumes</code></td><td>То же, но удаляет и тома<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">[1]</a></td></tr>
+  <tr><td><code>docker compose ps</code></td><td>Список контейнеров проекта (имена вида <code>проект-сервис-1</code>)<a class="cite" href="https://docs.docker.com/compose/intro/compose-application-model/">[2]</a></td></tr>
+</table>
+
+<h2>Попробуйте в терминале</h2>
+<p>Если ещё работают контейнеры из урока 1, остановите их (<code>docker ps</code>, <code>docker stop</code>): порт 8080 нужен снова. Создайте пустую папку, в ней файл <code>compose.yaml</code>. Это официальный пример PostgreSQL с веб-интерфейсом Adminer,<a class="cite" href="https://hub.docker.com/_/postgres">[4]</a> в который я добавил том. Синтаксис файла я проверил командой <code>docker compose config</code>, но сам проект не запускал.</p>
+<pre><code>services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+volumes:
+  pgdata:</code></pre>
+<pre><code>docker compose up -d
+docker compose ps                  # два контейнера проекта
+docker compose down                # контейнеры и сеть удалены, том остался
+docker volume ls                   # том pgdata всё ещё здесь
+docker compose down --volumes      # теперь удалится и том</code></pre>
+<p>Между <code>up</code> и <code>down</code> откройте <a href="http://localhost:8080">http://localhost:8080</a> — это Adminer. Обратите внимание на вывод <code>docker compose up</code>: он создаёт сеть, том и контейнеры, как описано выше. Какие имена получили контейнеры в <code>docker compose ps</code>?</p>
+
+<h2>Проверьте себя</h2>
+<div class="quiz">
+  <div class="q" data-correct="0">
+    <p>1. Что описывает файл <code>compose.yaml</code>?</p>
+    <button class="opt">Контейнеры приложения и их настройки</button>
+    <button class="opt">Пошаговый рецепт сборки одного образа</button>
+    <button class="opt">Список образов, скачанных на хост</button>
+    <div class="why">Compose-файл описывает запускаемые контейнеры. Рецепт сборки образа — это Dockerfile.</div>
+  </div>
+  <div class="q" data-correct="1">
+    <p>2. Вы выполнили <code>docker compose down</code>. Что с данными PostgreSQL в именованном томе?</p>
+    <button class="opt">Данные удаляются вместе с контейнером всегда</button>
+    <button class="opt">Данные остаются, том сохраняется по умолчанию</button>
+    <button class="opt">Данные копируются обратно в образ postgres</button>
+    <div class="why">Тома по умолчанию сохраняются при <code>down</code>. Удалить их можно флагом <code>--volumes</code>. Образ при этом никогда не меняется.</div>
+  </div>
+  <div class="q" data-correct="2">
+    <p>3. Какая команда останавливает и удаляет контейнеры и сеть, но оставляет тома?</p>
+    <button class="opt"><code>docker compose up</code></button>
+    <button class="opt"><code>docker compose ps</code></button>
+    <button class="opt"><code>docker compose down</code></button>
+    <div class="why"><code>up</code> запускает, <code>ps</code> только показывает контейнеры, а <code>down</code> убирает контейнеры и сеть.</div>
+  </div>
+  <div class="q" data-correct="0">
+    <p>4. Что делает ключ <code>build</code> у сервиса?</p>
+    <button class="opt">Собирает образ сервиса из исходников</button>
+    <button class="opt">Скачивает готовый образ из реестра</button>
+    <button class="opt">Запускает сервис после остальных сервисов</button>
+    <div class="why"><code>build</code> задаёт сборку образа из исходников. Готовый образ берут через <code>image</code>, а порядок запуска задаёт <code>depends_on</code>.</div>
+  </div>
+  <div class="score"></div>
+</div>
+
+<h2>Читать дальше</h2>
+<p><strong>Основной источник:</strong> <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">Docker Docs: What is Docker Compose?</a> — с готовым примером приложения и базы. Подробности ключей — в <a href="https://docs.docker.com/reference/compose-file/services/">справочнике по сервисам</a>. Термины — в <a href="../reference/glossary.html">глоссарии</a>.</p>
+
+<footer>
+  Что-то непонятно? Спросите меня, я ваш учитель. Особенно полезно принести реальный <code>compose.yaml</code> из чужого проекта: разберём его вместе.
+  <br>Источники: [1] <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/">What is Docker Compose?</a>, [2] <a href="https://docs.docker.com/compose/intro/compose-application-model/">Compose application model</a>, [3] <a href="https://docs.docker.com/reference/compose-file/services/">Compose file: services</a>, [4] <a href="https://hub.docker.com/_/postgres">Docker Hub: postgres</a>, [5] <a href="https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/">Persisting container data</a>
+</footer>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

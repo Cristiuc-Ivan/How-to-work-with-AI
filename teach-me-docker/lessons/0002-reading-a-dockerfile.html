@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Урок 2. Читаем Dockerfile</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<h1>Читаем Dockerfile</h1>
+<p class="sub">Урок 2 из курса «Docker: читать чужие проекты и CI». Около 12 минут. Предыдущий: <a href="0001-image-vs-container.html">образ и контейнер</a>.</p>
+
+<p><strong>Цель урока:</strong> открыть чужой Dockerfile и объяснить, что получится на выходе и почему строки идут именно в таком порядке.</p>
+
+<h2>Что такое Dockerfile</h2>
+<p>Это текстовый документ, по которому создаётся образ. В нём записано, какие команды выполнить, какие файлы скопировать, какую команду запускать при старте и так далее.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">[1]</a> Иначе говоря, <strong>Dockerfile — рецепт, образ — результат, контейнер — запуск результата</strong>.</p>
+
+<h2>Восемь инструкций, которые вы встретите чаще всего</h2>
+<table>
+  <tr><th>Инструкция</th><th>Что делает</th></tr>
+  <tr><td><code>FROM</code></td><td>Базовый образ, который расширяет сборка</td></tr>
+  <tr><td><code>WORKDIR</code></td><td>Рабочая директория внутри образа, куда копируются файлы</td></tr>
+  <tr><td><code>COPY</code></td><td>Копирует файлы с хоста в образ</td></tr>
+  <tr><td><code>RUN</code></td><td>Выполняет команду во время сборки</td></tr>
+  <tr><td><code>ENV</code></td><td>Задаёт переменную окружения для запущенного контейнера</td></tr>
+  <tr><td><code>EXPOSE</code></td><td>Помечает порт, который образ «хочет открыть»</td></tr>
+  <tr><td><code>USER</code></td><td>Пользователь по умолчанию для всех последующих инструкций</td></tr>
+  <tr><td><code>CMD</code></td><td>Команда по умолчанию, которую запустит контейнер</td></tr>
+</table>
+<p style="font-size:.85em;color:var(--muted)">Описания по документации Docker.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">[1]</a></p>
+
+<h2>Разбираем настоящий пример</h2>
+<p>Это пример из официальной документации (Python-приложение):<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">[1]</a></p>
+<pre><code>FROM python:3.13
+WORKDIR /usr/local/app
+
+# Install the application dependencies
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy in the source code
+COPY src ./src
+EXPOSE 8080
+
+# Setup an app user so the container doesn't run as the root user
+RUN useradd app
+USER app
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]</code></pre>
+<p>Читайте сверху вниз как последовательность шагов:</p>
+<ol>
+  <li><code>FROM python:3.13</code> — берём готовый образ с Python как основу.</li>
+  <li><code>WORKDIR</code> — дальше работаем в <code>/usr/local/app</code>.</li>
+  <li><code>COPY requirements.txt</code> и <code>RUN pip install</code> — ставим зависимости.</li>
+  <li><code>COPY src ./src</code> — кладём исходный код.</li>
+  <li><code>RUN useradd app</code> и <code>USER app</code> — приложение будет работать не от root.</li>
+  <li><code>CMD [...]</code> — при <code>docker run</code> стартует <code>uvicorn</code> на порту 8080.</li>
+</ol>
+
+<div class="note">
+  <strong>Про <code>RUN</code> и <code>CMD</code>.</strong> <code>RUN</code> выполняется <em>один раз при сборке образа</em> и результат остаётся в образе. <code>CMD</code> выполняется <em>при каждом запуске контейнера</em>. Эту путаницу вы будете видеть в чужих проектах чаще всего.
+</div>
+
+<h2>Почему порядок строк важен</h2>
+<p>Каждая инструкция Dockerfile становится слоем образа.<a class="cite" href="https://docs.docker.com/build/cache/">[2]</a> Если слой изменился, его нужно пересобрать, а вместе с ним пересобираются <strong>все слои после него</strong>.<a class="cite" href="https://docs.docker.com/build/cache/">[2]</a></p>
+<p>Поэтому в примере зависимости (<code>requirements.txt</code>) копируются и ставятся <em>раньше</em>, чем исходный код: код меняется часто, зависимости редко. Страница о кэше прямо этого не формулирует, но её пример подразумевает именно такой порядок: то, что меняется реже, идёт раньше. Подробнее в разделе <a href="https://docs.docker.com/build/cache/">Build cache</a>.</p>
+
+<h2>Сборка и теги</h2>
+<pre><code>docker build -t my-image .</code></pre>
+<p>Точка в конце — <em>контекст сборки</em>: место, где сборщик ищет Dockerfile и файлы, на которые тот ссылается. Без <code>-t</code> образ получит только трудно запоминаемый ID.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/">[3]</a></p>
+<p>Полное имя образа выглядит так: <code>[HOST[:PORT]/]PATH[:TAG]</code>. Хост по умолчанию — <code>docker.io</code>, тег по умолчанию — <code>latest</code>. Поэтому <code>docker/welcome-to-docker</code> из прошлого урока — это то же самое, что <code>docker.io/docker/welcome-to-docker:latest</code>.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/">[3]</a></p>
+
+<h2>Попробуйте в терминале</h2>
+<p>Создайте пустую папку, а в ней файл <code>Dockerfile</code> (без расширения) с двумя инструкциями из таблицы выше:</p>
+<pre><code>FROM python:3.13
+CMD ["python", "-c", "print('hello from my image')"]</code></pre>
+<p>Образ <code>python:3.13</code> скачается целиком при первой сборке, это может занять время. Затем:</p>
+<pre><code>docker build -t hello-py .
+docker image ls                 # ваш hello-py в списке
+docker run hello-py             # выведет приветствие
+docker run hello-py             # снова: новый контейнер из того же образа
+docker ps -a                    # оба запуска видны как контейнеры</code></pre>
+<p>Теперь добавьте между строк <code>RUN echo "build step"</code> и соберите ещё раз. Посмотрите на вывод сборки: что именно Docker делает заново, а что уже есть? Своими словами это «слои и кэш» из раздела выше.</p>
+
+<h2>Проверьте себя</h2>
+<div class="quiz">
+  <div class="q" data-correct="2">
+    <p>1. Какая инструкция задаёт базовый образ?</p>
+    <button class="opt"><code>WORKDIR</code></button>
+    <button class="opt"><code>CMD</code></button>
+    <button class="opt"><code>FROM</code></button>
+    <div class="why"><code>FROM</code> указывает базовый образ, который расширяет сборка. <code>WORKDIR</code> задаёт рабочую папку, а <code>CMD</code> — команду запуска.</div>
+  </div>
+  <div class="q" data-correct="0">
+    <p>2. Что произойдёт при <code>docker run</code> с образом из примера?</p>
+    <button class="opt">Запустится команда uvicorn на порту 8080</button>
+    <button class="opt">Выполнится pip install ещё раз заново</button>
+    <button class="opt">Соберётся новый образ из Dockerfile сразу</button>
+    <div class="why"><code>CMD</code> — команда по умолчанию для контейнера. <code>pip install</code> выполнился один раз при сборке, а сборка — это отдельная команда <code>docker build</code>.</div>
+  </div>
+  <div class="q" data-correct="1">
+    <p>3. Вы изменили файл в <code>src</code> и пересобрали образ из примера. Что пересоберётся?</p>
+    <button class="opt">Все слои, начиная с базового образа</button>
+    <button class="opt">Слой COPY src и все следующие</button>
+    <button class="opt">Только последний слой с командой CMD</button>
+    <div class="why">Изменённый слой и все слои после него пересобираются. Слои до <code>COPY src</code> (включая установку зависимостей) остаются прежними.</div>
+  </div>
+  <div class="q" data-correct="2">
+    <p>4. Что означает точка в конце <code>docker build -t app .</code>?</p>
+    <button class="opt">Указывает порт контейнера по умолчанию</button>
+    <button class="opt">Запускает контейнер после успешной сборки</button>
+    <button class="opt">Задаёт контекст сборки: текущую папку</button>
+    <div class="why">Точка — это контекст сборки: путь, где сборщик находит Dockerfile и нужные ему файлы.</div>
+  </div>
+  <div class="score"></div>
+</div>
+
+<h2>Читать дальше</h2>
+<p><strong>Основной источник:</strong> <a href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">Docker Docs: Writing a Dockerfile</a>. Короткая страница с тем же примером. Затем <a href="https://docs.docker.com/build/cache/">Build cache</a>. Термины — в <a href="../reference/glossary.html">глоссарии</a>.</p>
+
+<footer>
+  Что-то непонятно? Спросите меня, я ваш учитель: любые уточняющие вопросы по уроку приветствуются, особенно если в реальном Dockerfile встретилась инструкция, которой здесь нет.
+  <br>Источники: [1] <a href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">Writing a Dockerfile</a>, [2] <a href="https://docs.docker.com/build/cache/">Build cache</a>, [3] <a href="https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/">Build, tag, and publish an image</a>
+</footer>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
